@@ -1,0 +1,3348 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <title>Daily Routine Map &amp; Task Planner</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+      --apple-blue: #0A84FF;
+      --titanium-gold: #E2C391;
+      --titanium-gold-deep: #D4AF37;
+      --apple-green: #30D158;
+      --apple-amber: #FF9F0A;
+      --apple-red: #FF453A;
+    }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      overscroll-behavior-x: none;
+      touch-action: pan-y;
+    }
+    body > * { max-width: 100vw; }
+    img, svg, canvas, video { max-width: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+      background-color: #000000;
+      background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 255, 255, 0.06), transparent);
+      color: #F5F5F7;
+    }
+    h1, h2, h3 {
+      letter-spacing: -0.035em;
+      color: #F5F5F7;
+    }
+    .spec-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      color: #86868B;
+    }
+    .glass-panel {
+      background: linear-gradient(180deg, rgba(32, 32, 36, 0.72) 0%, rgba(18, 18, 20, 0.86) 100%);
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 48px -12px rgba(0, 0, 0, 0.85);
+      border: none;
+    }
+    .vision-sheet {
+      background: rgba(20, 20, 22, 0.88);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.14), 0 32px 64px -16px rgba(0, 0, 0, 0.9);
+    }
+    .apple-card {
+      background: linear-gradient(180deg, rgba(36, 36, 40, 0.65) 0%, rgba(22, 22, 25, 0.8) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+      transition: all 0.28s var(--spring);
+    }
+    .apple-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      background: linear-gradient(180deg, rgba(44, 44, 48, 0.75) 0%, rgba(26, 26, 30, 0.88) 100%);
+    }
+    .apple-now-card {
+      border-color: rgba(10, 132, 255, 0.55) !important;
+      background: linear-gradient(180deg, rgba(10, 132, 255, 0.14) 0%, rgba(22, 24, 30, 0.88) 100%) !important;
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 0 24px rgba(10, 132, 255, 0.18) !important;
+    }
+    .spring-btn {
+      transition: all 0.28s var(--spring);
+    }
+    .spring-btn:active {
+      transform: scale(0.97);
+    }
+    .apple-pro-btn {
+      background: #0A84FF;
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 20px rgba(10, 132, 255, 0.25);
+    }
+    .apple-pro-btn:hover {
+      filter: brightness(1.08);
+    }
+    .seg-track {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .seg-active {
+      background: rgba(255, 255, 255, 0.14);
+      color: #F5F5F7;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+    .laser-line {
+      background: linear-gradient(90deg, #0A84FF 0%, rgba(10, 132, 255, 0.35) 100%);
+      box-shadow: 0 0 14px rgba(10, 132, 255, 0.85), 0 0 4px rgba(10, 132, 255, 0.6);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(134, 134, 139, 0.28); border-radius: 9999px; }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      70% { transform: scale(1.18); opacity: 0; }
+      100% { transform: scale(1.18); opacity: 0; }
+    }
+    .alarm-pulse::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 9999px;
+      border: 2px solid #FF9F0A;
+      animation: pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    @keyframes pop-bump {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+    .xp-bump { animation: pop-bump 0.38s var(--spring); }
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-enter {
+      animation: modal-in 0.28s var(--spring);
+    }
+    .heatmap-cell {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      transition: transform 0.14s var(--spring), outline-color 0.14s ease;
+    }
+    .heatmap-cell:hover {
+      transform: scale(1.28);
+      outline: 1.5px solid rgba(245, 245, 247, 0.75);
+      z-index: 10;
+    }
+    .drop-active {
+      outline: 2px solid #0A84FF !important;
+      background: rgba(10, 132, 255, 0.16) !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-[#E5C158]/30 selection:text-[#F5F5F7]">
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none min-w-0"></div>
+
+  <!-- Live Drag Tooltip -->
+  <div id="dragTooltip" class="fixed z-50 hidden pointer-events-none rounded-lg bg-[#E5C158] px-2.5 py-1 text-xs font-semibold tabular-nums text-white shadow-xl"></div>
+
+  <!-- Hidden File Input for JSON Import -->
+  <input id="importJsonInput" type="file" accept=".json,application/json" class="hidden" />
+
+  <!-- Active Alarm Modal -->
+  <div id="alarmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+    <div class="vision-sheet modal-enter w-full max-w-md rounded-3xl p-6 border border-[#E5C158]/40">
+      <div class="flex items-center gap-3 mb-4 min-w-0">
+        <div class="relative flex h-12 w-12 items-center justify-center rounded-full bg-[#E5C158]/20 text-[#E5C158] alarm-pulse">
+          <i data-lucide="bell-ring" class="h-6 w-6"></i>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-[#E5C158]">Routine Alarm</p>
+          <h3 id="alarmModalTitle" class="text-lg font-bold text-[#F5F5F7]">Time Block Starting</h3>
+        </div>
+      </div>
+      <p id="alarmModalDesc" class="text-sm text-[#86868B] mb-6"></p>
+      <div class="flex flex-wrap gap-3 justify-end min-w-0">
+        <button id="snoozeAlarmBtn" class="spring-btn px-4 py-2 rounded-xl text-sm font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+          Snooze 5m
+        </button>
+        <button id="dismissAlarmBtn" class="spring-btn px-5 py-2 rounded-xl text-sm font-semibold bg-[#E5C158] hover:brightness-110 text-black">
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit Block Modal -->
+  <div id="blockModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/75 p-4 backdrop-blur-md">
+    <div class="vision-sheet modal-enter w-full max-w-md rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-4 min-w-0">
+        <h3 id="blockModalHeading" class="text-lg font-semibold text-[#F5F5F7]">Edit Routine Block</h3>
+        <button id="closeBlockModalBtn" class="spring-btn p-1.5 rounded-lg text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/10" aria-label="Close modal">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+      <form id="blockForm" class="space-y-4">
+        <input type="hidden" id="blockIdInput" />
+        <div>
+          <label for="blockTitleInput" class="block text-xs font-medium text-[#86868B] mb-1">Block Title</label>
+          <input id="blockTitleInput" type="text" required placeholder="e.g., Quant Finance Prep" class="w-full rounded-xl bg-black/50 border border-white/10 px-3.5 py-2.5 text-sm text-[#F5F5F7] placeholder-[#86868B]/60 focus:outline-none focus:border-[#E5C158]" />
+        </div>
+        <div class="grid grid-cols-2 gap-3 min-w-0">
+          <div>
+            <label for="blockStartInput" class="block text-xs font-medium text-[#86868B] mb-1">Start Time</label>
+            <input id="blockStartInput" type="time" required class="w-full rounded-xl bg-black/50 border border-white/10 px-3.5 py-2.5 text-sm text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]" />
+          </div>
+          <div>
+            <label for="blockEndInput" class="block text-xs font-medium text-[#86868B] mb-1">End Time</label>
+            <input id="blockEndInput" type="time" required class="w-full rounded-xl bg-black/50 border border-white/10 px-3.5 py-2.5 text-sm text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 min-w-0">
+          <div>
+            <label for="blockCategoryInput" class="block text-xs font-medium text-[#86868B] mb-1">Category</label>
+            <select id="blockCategoryInput" class="w-full rounded-xl bg-black/50 border border-white/10 px-3 py-2.5 text-sm text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]">
+              <option value="classes">University &amp; Classes</option>
+              <option value="finance">Markets &amp; Quant</option>
+              <option value="building">Deep Work &amp; Projects</option>
+              <option value="wellness">Health &amp; Meals</option>
+              <option value="rest">Wind-Down &amp; Sleep</option>
+            </select>
+          </div>
+          <div>
+            <label for="blockOffsetInput" class="block text-xs font-medium text-[#86868B] mb-1">Alarm Timing</label>
+            <select id="blockOffsetInput" class="w-full rounded-xl bg-black/50 border border-white/10 px-3 py-2.5 text-sm text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]">
+              <option value="0">At start time</option>
+              <option value="5">5 min before</option>
+              <option value="10">10 min before</option>
+              <option value="15">15 min before</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="blockNotesInput" class="block text-xs font-medium text-[#86868B] mb-1">Focus Note (optional)</label>
+          <input id="blockNotesInput" type="text" placeholder="e.g., Nifty 50 movers, probability drills" class="w-full rounded-xl bg-black/50 border border-white/10 px-3.5 py-2.5 text-sm text-[#F5F5F7] placeholder-[#86868B]/60 focus:outline-none focus:border-[#E5C158]" />
+        </div>
+        <label class="flex items-center gap-2.5 cursor-pointer select-none min-w-0">
+          <input id="blockAlarmInput" type="checkbox" class="h-4 w-4 rounded border-white/20 bg-black/60 text-[#E5C158] focus:ring-[#E5C158]" />
+          <span class="text-sm text-[#F5F5F7]">Enable alarm &amp; reminder for this block</span>
+        </label>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10 min-w-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <button type="button" id="deleteBlockBtn" class="spring-btn px-3 py-2 rounded-xl text-xs font-medium text-[#FF453A] hover:bg-[#FF453A]/10 hidden">
+              Delete
+            </button>
+            <a id="gcalSingleLink" href="#" target="_blank" rel="noopener noreferrer" class="spring-btn inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+              <i data-lucide="calendar-plus" class="h-3.5 w-3.5 text-[#E5C158]"></i>
+              Google Calendar
+            </a>
+          </div>
+          <div class="flex gap-2 ml-auto min-w-0">
+            <button type="button" id="cancelBlockBtn" class="spring-btn px-4 py-2 rounded-xl text-sm font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7]">
+              Cancel
+            </button>
+            <button type="submit" class="spring-btn px-5 py-2 rounded-xl text-sm font-semibold apple-pro-btn text-white font-semibold">
+              Save Block
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Day Inspector Modal -->
+  <div id="dayInspectorModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+    <div class="vision-sheet modal-enter w-full max-w-lg rounded-3xl p-6 max-h-[85vh] flex flex-col min-w-0">
+      <div class="flex items-start justify-between gap-3 mb-4 min-w-0">
+        <div>
+          <div class="flex items-center gap-2 min-w-0">
+            <h3 id="inspectorDateTitle" class="text-lg font-bold text-[#F5F5F7]">Execution Log</h3>
+            <span id="inspectorDemoTag" class="hidden rounded-full bg-white/10 border border-white/10 px-2 py-0.5 text-[10px] font-medium text-[#86868B]">Demo Seed</span>
+          </div>
+          <p id="inspectorSubtitle" class="text-xs text-[#86868B] mt-0.5"></p>
+        </div>
+        <button id="closeInspectorBtn" class="spring-btn p-1.5 rounded-lg text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/10" aria-label="Close inspector">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-3 gap-2.5 mb-4 min-w-0">
+        <div class="rounded-xl bg-black/45 border border-white/10 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-[#86868B]">Completion</p>
+          <p id="inspectorPctVal" class="text-lg font-bold text-[#F5F5F7] mt-0.5 tabular-nums">0%</p>
+        </div>
+        <div class="rounded-xl bg-black/45 border border-white/10 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-[#86868B]">XP Earned</p>
+          <p id="inspectorXpVal" class="text-lg font-bold text-[#E5C158] mt-0.5 tabular-nums">+0 XP</p>
+        </div>
+        <div class="rounded-xl bg-black/45 border border-white/10 p-3">
+          <p class="text-[10px] uppercase tracking-wider text-[#86868B]">Items Done</p>
+          <p id="inspectorRatioVal" class="text-lg font-bold text-[#30D158] mt-0.5 tabular-nums">0 / 0</p>
+        </div>
+      </div>
+      <div id="inspectorChecklist" class="space-y-2 overflow-y-auto pr-1 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- Cross-Device Sync Modal -->
+  <div id="syncModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+    <div class="vision-sheet modal-enter w-full max-w-lg rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-4 min-w-0">
+        <div>
+          <h3 class="text-lg font-semibold text-[#F5F5F7]">Sync Devices</h3>
+          <p class="text-xs text-[#86868B]">Zero-server cross-device sync via compressed snapshot or GitHub Gist</p>
+        </div>
+        <button id="closeSyncModalBtn" class="spring-btn p-1.5 rounded-lg text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/10" aria-label="Close sync modal">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5 rounded-xl seg-track p-1 mb-4 min-w-0">
+        <button data-synctab="snapshot" class="sync-tab spring-btn rounded-lg py-1.5 text-xs font-medium">Snapshot Link / Key</button>
+        <button data-synctab="gist" class="sync-tab spring-btn rounded-lg py-1.5 text-xs font-medium">Live Cloud Auto-Sync</button>
+      </div>
+
+      <!-- Tab 1: Snapshot Link / Key -->
+      <div id="syncTabSnapshot" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-[#86868B] mb-1.5">1. Shareable Sync Link (open on phone or another laptop)</label>
+          <div class="flex gap-2 min-w-0">
+            <input id="syncLinkOutput" type="text" readonly class="flex-1 rounded-xl bg-black/50 border border-white/10 px-3 py-2 text-xs text-[#F5F5F7] font-mono truncate" />
+            <button id="copySyncLinkBtn" class="spring-btn shrink-0 rounded-xl apple-pro-btn px-3.5 py-2 text-xs font-semibold text-white">Copy Link</button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-[#86868B] mb-1.5">2. Compact Sync Key</label>
+          <div class="flex gap-2 min-w-0">
+            <input id="syncKeyOutput" type="text" readonly class="flex-1 rounded-xl bg-black/50 border border-white/10 px-3 py-2 text-xs text-[#86868B] font-mono truncate" />
+            <button id="copySyncKeyBtn" class="spring-btn shrink-0 rounded-xl bg-white/10 hover:bg-white/15 px-3.5 py-2 text-xs font-medium text-[#F5F5F7] border border-white/10">Copy Key</button>
+          </div>
+        </div>
+        <div class="pt-3 border-t border-white/10">
+          <label for="pasteSyncInput" class="block text-xs font-medium text-[#86868B] mb-1.5">Import from Sync Link or Key</label>
+          <div class="flex gap-2 min-w-0">
+            <input id="pasteSyncInput" type="text" placeholder="Paste #sync=... link or key here" class="flex-1 rounded-xl bg-black/50 border border-white/10 px-3 py-2 text-xs text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]" />
+            <button id="applyPasteSyncBtn" class="spring-btn shrink-0 rounded-xl bg-[#30D158] hover:brightness-110 px-3.5 py-2 text-xs font-semibold text-black">Preview</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Live GitHub Gist Auto-Sync -->
+      <div id="syncTabGist" class="hidden space-y-3.5">
+        <div class="rounded-xl bg-black/40 border border-white/10 p-3 text-xs text-[#86868B]">
+          Saves your state to a private GitHub Gist (<code class="text-[#F5F5F7]">daily-routine-map-sync.json</code>) on every edit (2s debounce) and pulls newer revisions on load or window focus.
+        </div>
+        <div>
+          <label for="gistTokenInput" class="block text-xs font-medium text-[#86868B] mb-1">GitHub Personal Access Token (<code class="text-[#F5F5F7]">gist</code> scope)</label>
+          <input id="gistTokenInput" type="password" placeholder="ghp_..." class="w-full rounded-xl bg-black/50 border border-white/10 px-3 py-2 text-xs text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]" />
+        </div>
+        <div>
+          <label for="gistIdInput" class="block text-xs font-medium text-[#86868B] mb-1">Gist ID (leave blank to auto-create a private Gist)</label>
+          <input id="gistIdInput" type="text" placeholder="Optional existing Gist ID" class="w-full rounded-xl bg-black/50 border border-white/10 px-3 py-2 text-xs text-[#F5F5F7] font-mono focus:outline-none focus:border-[#E5C158]" />
+        </div>
+        <div class="flex items-center justify-between pt-2 min-w-0">
+          <span id="gistStatusText" class="text-xs text-[#86868B]">Not configured</span>
+          <div class="flex gap-2 min-w-0">
+            <button id="disconnectGistBtn" class="spring-btn px-3 py-2 rounded-xl text-xs font-medium text-[#FF453A] hover:bg-[#FF453A]/10">Disconnect</button>
+            <button id="saveGistBtn" class="spring-btn px-4 py-2 rounded-xl text-xs font-semibold apple-pro-btn text-white font-semibold">Save &amp; Sync Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Sync Preview Modal -->
+  <div id="incomingSyncModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 p-4 backdrop-blur-md">
+    <div class="vision-sheet modal-enter w-full max-w-md rounded-3xl p-6 border border-[#E5C158]/40">
+      <div class="flex items-center gap-2.5 mb-3 min-w-0">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5C158]/20 text-[#E5C158]">
+          <i data-lucide="refresh-cw" class="h-5 w-5"></i>
+        </span>
+        <div>
+          <h3 class="text-lg font-bold text-[#F5F5F7]">Incoming Sync Snapshot</h3>
+          <p class="text-xs text-[#86868B]">Choose how to apply this state to your device</p>
+        </div>
+      </div>
+      <div id="incomingSyncSummary" class="rounded-xl bg-black/50 border border-white/10 p-3.5 text-xs text-[#F5F5F7] space-y-1 mb-5"></div>
+      <div class="flex flex-wrap justify-end gap-2 min-w-0">
+        <button id="cancelIncomingSyncBtn" class="spring-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7]">Cancel</button>
+        <button id="mergeIncomingSyncBtn" class="spring-btn px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#30D158]/20 hover:bg-[#30D158]/30 text-[#30D158] border border-[#30D158]/40">Merge Tasks</button>
+        <button id="overwriteIncomingSyncBtn" class="spring-btn px-4 py-2 rounded-xl text-xs font-semibold apple-pro-btn text-white font-semibold">Overwrite Local</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-Screen Focus Mode Overlay -->
+  <div id="focusModal" class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-black/95 p-6 backdrop-blur-2xl">
+    <div class="vision-sheet modal-enter w-full max-w-xl rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center min-w-0">
+      <div class="w-full flex items-center justify-between mb-6 min-w-0">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-[#E5C158]/15 border border-[#E5C158]/30 px-3 py-1 text-xs font-semibold text-[#E5C158]">
+          <i data-lucide="target" class="h-3.5 w-3.5"></i>
+          Focus Mode
+        </span>
+        <div class="flex items-center gap-2 min-w-0">
+          <button id="focusMuteBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+            <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
+            <span id="focusMuteLabel">Sound ON</span>
+          </button>
+          <button id="exitFocusBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-[#F5F5F7] border border-white/10">
+            Exit Focus
+          </button>
+        </div>
+      </div>
+
+      <h2 id="focusBlockTitle" class="text-xl sm:text-2xl font-bold text-[#F5F5F7] mb-1">Active Block</h2>
+      <p id="focusBlockWindow" class="text-xs sm:text-sm text-[#86868B] mb-6 tabular-nums">-- – --</p>
+
+      <div class="relative flex items-center justify-center w-52 h-52 mb-6">
+        <svg class="w-52 h-52 -rotate-90" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" />
+          <circle id="focusRingCircle" cx="90" cy="90" r="80" fill="none" stroke="#E5C158" stroke-width="8" stroke-linecap="round" stroke-dasharray="502.65" stroke-dashoffset="502.65" style="transition: stroke-dashoffset 0.5s var(--spring);" />
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center min-w-0">
+          <span id="focusCountdownText" class="text-3xl sm:text-4xl font-bold tracking-tight tabular-nums text-[#F5F5F7]">00:00</span>
+          <span id="focusPctSubtext" class="text-xs text-[#86868B] mt-1 tabular-nums">0% elapsed</span>
+        </div>
+      </div>
+
+      <div class="w-full text-left border-t border-white/10 pt-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-[#86868B] mb-2.5">Linked Tasks</p>
+        <div id="focusLinkedTasks" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sign In / Create Account Modal (Username + Password) -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+    <div class="vision-sheet modal-enter w-full max-w-sm rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-4 min-w-0">
+        <div>
+          <h3 class="text-lg font-semibold text-[#F5F5F7]">Cloud Account</h3>
+          <p id="authModalSub" class="text-xs text-[#86868B]">Sign in or create an account to save your progress</p>
+        </div>
+        <button id="closeAuthModalBtn" class="spring-btn p-1.5 rounded-lg text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/10" aria-label="Close sign in modal">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <div id="authSignedInView" class="hidden space-y-4">
+        <div class="rounded-2xl bg-black/50 border border-white/10 p-4 flex items-center justify-between min-w-0">
+          <div>
+            <p class="spec-label">Signed In As</p>
+            <p id="authActiveUserText" class="text-base font-semibold text-[#E2C391] mt-0.5">@user</p>
+          </div>
+          <span id="authLiveBadge" class="rounded-full bg-[#30D158]/15 border border-[#30D158]/30 px-2.5 py-0.5 text-[11px] font-medium text-[#30D158]">Live Sync</span>
+        </div>
+        <button id="signOutBtn" type="button" class="spring-btn w-full rounded-xl bg-[#FF453A]/15 hover:bg-[#FF453A]/25 text-[#FF453A] border border-[#FF453A]/30 py-2.5 text-sm font-semibold">
+          Sign Out
+        </button>
+      </div>
+
+      <form id="authForm" class="space-y-3.5">
+        <div>
+          <label for="authUsernameInput" class="block text-xs font-medium text-[#86868B] mb-1">Email</label>
+          <input id="authUsernameInput" type="email" required autocomplete="email" inputmode="email" placeholder="you@example.com" class="w-full rounded-xl bg-black/50 border border-white/10 px-3.5 py-2.5 text-sm text-[#F5F5F7] placeholder-[#86868B]/60 focus:outline-none focus:border-[#0A84FF]" />
+        </div>
+        <div>
+          <label for="authPasswordInput" class="block text-xs font-medium text-[#86868B] mb-1">Password</label>
+          <input id="authPasswordInput" type="password" required minlength="6" autocomplete="current-password" placeholder="Min. 6 characters" class="w-full rounded-xl bg-black/50 border border-white/10 px-3.5 py-2.5 text-sm text-[#F5F5F7] placeholder-[#86868B]/60 focus:outline-none focus:border-[#0A84FF]" />
+        </div>
+        <p id="authErrorText" class="hidden text-xs text-[#FF453A]"></p>
+        <p id="authInfoText" class="hidden text-xs text-[#30D158]"></p>
+        <div class="grid grid-cols-2 gap-2.5 pt-2 min-w-0">
+          <button id="createAccountBtn" type="button" class="spring-btn rounded-xl bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10 py-2.5 text-xs sm:text-sm font-semibold">
+            Create Account
+          </button>
+          <button type="submit" class="spring-btn apple-pro-btn rounded-xl py-2.5 text-xs sm:text-sm font-semibold text-white">
+            Sign In
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="mx-auto w-full max-w-7xl overflow-x-hidden px-3.5 py-5 sm:px-6 lg:px-8 space-y-6">
+    <!-- Top Header -->
+    <header class="glass-panel min-w-0 w-full rounded-3xl p-4 sm:p-6">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between min-w-0">
+        <div>
+          <div class="flex flex-wrap items-center gap-2.5 min-w-0">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#0A84FF]/15 text-[#0A84FF] border border-[#0A84FF]/30">
+              <i data-lucide="compass" class="h-4 w-4"></i>
+            </span>
+            <h1 class="text-xl sm:text-2xl font-bold text-[#F5F5F7]">Daily Routine Map</h1>
+            <span id="liveClockBadge" class="rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-[#F5F5F7]">
+              --:--:--
+            </span>
+            <span id="streakBadge" class="inline-flex items-center gap-1 rounded-full bg-[#E2C391]/15 border border-[#E2C391]/30 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-[#E2C391]">
+              <i data-lucide="flame" class="h-3.5 w-3.5"></i>
+              <span id="streakCountText">0d streak</span>
+            </span>
+            <span id="cloudSyncPill" class="hidden rounded-full bg-[#30D158]/15 border border-[#30D158]/30 px-2.5 py-0.5 text-[11px] font-medium text-[#30D158]">
+              Cloud Synced
+            </span>
+          </div>
+          <p id="currentStatusText" class="mt-1.5 text-sm text-[#86868B]">
+            Loading your active time block...
+          </p>
+        </div>
+
+        <!-- Alarm, Sync, Backup & Export Controls -->
+        <div class="flex flex-wrap items-center gap-2 max-w-full min-w-0">
+          <button id="soundToggleBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium border">
+            <i data-lucide="volume-2" class="h-3.5 w-3.5"></i>
+            <span id="soundToggleLabel">Sound: ON</span>
+          </button>
+          <button id="notifToggleBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+            <i data-lucide="bell" class="h-3.5 w-3.5"></i>
+            <span id="notifToggleLabel">Enable Alerts</span>
+          </button>
+          <button id="testAlarmBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium bg-[#0A84FF]/15 hover:bg-[#0A84FF]/25 text-[#0A84FF] border border-[#0A84FF]/30">
+            <i data-lucide="play" class="h-3.5 w-3.5"></i>
+            Test Alarm
+          </button>
+          <button id="authBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+            <i data-lucide="user" class="h-3.5 w-3.5 text-[#E2C391]"></i>
+            <span id="authBtnLabel">Sign In</span>
+          </button>
+          <button id="openSyncModalBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+            <i data-lucide="smartphone" class="h-3.5 w-3.5 text-[#E5C158]"></i>
+            Sync Devices
+          </button>
+          <button id="exportJsonBtn" title="Backup all routine, task, and XP data as JSON" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+            <i data-lucide="download" class="h-3.5 w-3.5"></i>
+            Backup
+          </button>
+          <button id="importJsonBtn" title="Restore data from a JSON backup" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+            <i data-lucide="upload" class="h-3.5 w-3.5"></i>
+            Restore
+          </button>
+          <button id="linkLocalFileBtn" title="Auto-save every edit to a local .json file on your device" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+            <i data-lucide="hard-drive" class="h-3.5 w-3.5"></i>
+            <span id="linkLocalFileLabel">Link Local File</span>
+          </button>
+          <button id="exportIcsBtn" title="Download .ics calendar file with built-in phone alarms" class="spring-btn inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold apple-pro-btn text-white font-semibold">
+            <i data-lucide="calendar-plus" class="h-3.5 w-3.5"></i>
+            Sync (.ics)
+          </button>
+        </div>
+      </div>
+
+      <!-- XP & Metrics Strip -->
+      <div class="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 lg:grid-cols-5 gap-3 min-w-0">
+        <div id="xpCard" class="col-span-2 lg:col-span-1 rounded-xl bg-gradient-to-br from-[#E2C391]/12 to-black/50 border border-[#E2C391]/25 px-3.5 py-2.5">
+          <div class="flex items-center justify-between min-w-0">
+            <p id="levelLabel" class="text-[11px] font-bold uppercase tracking-wider text-[#E2C391]">Lvl 1 · Initiate</p>
+            <span id="totalXpLabel" class="text-[11px] font-semibold tabular-nums text-[#D4AF37]">0 XP</span>
+          </div>
+          <div class="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+            <div id="xpBarFill" class="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E2C391]" style="width: 0%; transition: width 0.4s var(--spring);"></div>
+          </div>
+          <p id="xpNextLabel" class="mt-1 text-[10px] text-[#86868B] tabular-nums">0 / 100 XP to next level</p>
+        </div>
+
+        <div class="min-w-0 rounded-2xl bg-black/40 border border-white/[0.07] px-3.5 py-2.5">
+          <p class="spec-label font-medium">Routine Progress</p>
+          <p id="routineProgressVal" class="text-lg font-bold text-[#F5F5F7] mt-0.5 tabular-nums">0 / 0</p>
+        </div>
+        <div class="min-w-0 rounded-2xl bg-black/40 border border-white/[0.07] px-3.5 py-2.5">
+          <p class="spec-label font-medium">Active Alarms</p>
+          <p id="activeAlarmsVal" class="text-lg font-bold text-[#FF9F0A] mt-0.5 tabular-nums">0</p>
+        </div>
+        <div class="min-w-0 rounded-2xl bg-black/40 border border-white/[0.07] px-3.5 py-2.5">
+          <p class="spec-label font-medium">Next Alarm</p>
+          <p id="nextAlarmVal" class="text-sm sm:text-base font-semibold text-[#0A84FF] mt-1 truncate tabular-nums">--</p>
+        </div>
+        <div class="min-w-0 rounded-2xl bg-black/40 border border-white/[0.07] px-3.5 py-2.5">
+          <p class="spec-label font-medium">Open Tasks</p>
+          <p id="openTasksVal" class="text-lg font-bold text-[#30D158] mt-0.5 tabular-nums">0</p>
+        </div>
+      </div>
+
+      <!-- 24h Distribution Bar -->
+      <div class="mt-3">
+        <div class="flex items-center justify-between text-[11px] text-[#86868B] mb-1.5 min-w-0">
+          <span>24-Hour Energy &amp; Focus Distribution <span class="hidden sm:inline text-[#86868B]/75">· Shortcuts: [N] Task · [B] Block · [1/2/3] Tabs</span></span>
+          <span id="totalPlannedHours" class="tabular-nums">0h mapped</span>
+        </div>
+        <div id="distributionBar" class="h-2 w-full rounded-full bg-white/10 overflow-hidden flex min-w-0"></div>
+      </div>
+    </header>
+
+    <!-- Main 2-Column Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-w-0">
+      <!-- Left: Strict Pixel-Locked 24-Hour Proportional Time-Block Map -->
+      <section class="lg:col-span-7 min-w-0 w-full glass-panel rounded-3xl p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 min-w-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <h2 class="text-base sm:text-lg font-semibold text-[#F5F5F7]">Time-Block Map</h2>
+            <div class="inline-flex rounded-xl seg-track p-0.5">
+              <button data-mode="weekday" class="mode-btn spring-btn px-2.5 py-1 rounded-lg text-xs font-medium">Weekday</button>
+              <button data-mode="weekend" class="mode-btn spring-btn px-2.5 py-1 rounded-lg text-xs font-medium">Weekend</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 min-w-0">
+            <button id="jumpToNowBtn" class="spring-btn px-2.5 py-1.5 rounded-xl text-xs font-medium bg-white/10 hover:bg-white/15 text-[#F5F5F7] border border-white/10">
+              Jump to Now
+            </button>
+            <button id="resetRoutineBtn" class="spring-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/10">
+              Reset
+            </button>
+            <button id="addBlockBtn" class="spring-btn inline-flex items-center gap-1.5 rounded-xl bg-[#0A84FF]/15 hover:bg-[#0A84FF]/25 text-[#0A84FF] border border-[#0A84FF]/30 px-3 py-1.5 text-xs sm:text-sm font-medium">
+              <i data-lucide="plus" class="h-4 w-4"></i>
+              Add Block
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div id="categoryFilters" class="flex flex-wrap gap-1.5 mb-4 min-w-0">
+          <button data-cat="all" class="cat-pill spring-btn px-3 py-1 rounded-full text-xs font-medium">All</button>
+          <button data-cat="classes" class="cat-pill spring-btn px-3 py-1 rounded-full text-xs font-medium">Classes</button>
+          <button data-cat="finance" class="cat-pill spring-btn px-3 py-1 rounded-full text-xs font-medium">Markets &amp; Quant</button>
+          <button data-cat="building" class="cat-pill spring-btn px-3 py-1 rounded-full text-xs font-medium">Projects</button>
+          <button data-cat="wellness" class="cat-pill spring-btn px-3 py-1 rounded-full text-xs font-medium">Health &amp; Meals</button>
+          <button data-cat="rest" class="cat-pill spring-btn px-3 py-1 rounded-full text-xs font-medium">Rest</button>
+        </div>
+
+        <!-- Pixel-Locked 24h Scrollable Canvas -->
+        <div id="timelineScrollViewport" class="max-h-[680px] overflow-y-auto pr-1 rounded-xl border border-white/5 bg-black/30">
+          <div id="timelineCanvas" class="relative flex min-w-0" style="height: 1536px;">
+            <!-- Left Hour Ruler (64px per hour) -->
+            <div id="hourRuler" class="w-12 sm:w-14 shrink-0 relative border-r border-white/10 select-none"></div>
+            <!-- Gridlines + Blocks + Free Slots + Laser Line -->
+            <div id="routineTimeline" class="flex-1 min-w-0 relative">
+              <div id="hourGridlines" class="absolute inset-0 pointer-events-none"></div>
+              <div id="freeSlotsLayer" class="absolute inset-0 z-10"></div>
+              <div id="blocksLayer" class="absolute inset-0 z-20 pointer-events-none"></div>
+              <div id="nowLaserLine" class="pointer-events-none absolute left-0 right-0 z-30 flex items-center min-w-0" style="top: 0px;">
+                <span id="nowLaserTimePill" class="rounded-r-md bg-[#0A84FF] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white shadow-lg shadow-lg">--:--</span>
+                <div class="flex-1 h-[1.5px] laser-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Day / Week / Month Task Planner -->
+      <aside class="lg:col-span-5 min-w-0 w-full glass-panel rounded-3xl p-4 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between min-w-0">
+          <div>
+            <h2 class="text-base sm:text-lg font-semibold text-[#F5F5F7]">Task Planner</h2>
+            <p class="text-xs text-[#86868B]">Drag tasks onto blocks to link · Click text to edit</p>
+          </div>
+          <div id="taskFilterGroup" class="inline-flex rounded-xl seg-track p-0.5">
+            <button data-tfilter="all" class="tfilter-btn spring-btn px-2 py-1 rounded-lg text-[11px] font-medium">All</button>
+            <button data-tfilter="active" class="tfilter-btn spring-btn px-2 py-1 rounded-lg text-[11px] font-medium">Open</button>
+            <button data-tfilter="done" class="tfilter-btn spring-btn px-2 py-1 rounded-lg text-[11px] font-medium">Done</button>
+          </div>
+        </div>
+
+        <!-- Scope Tabs: Day / Week / Month -->
+        <div class="grid grid-cols-3 gap-1.5 rounded-xl seg-track p-1 min-w-0">
+          <button data-scope="day" class="scope-tab spring-btn flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs sm:text-sm font-medium min-w-0">
+            <span>Day</span>
+            <span id="countDay" class="rounded-full px-1.5 py-0.2 text-[10px] bg-white/10 tabular-nums">0</span>
+          </button>
+          <button data-scope="week" class="scope-tab spring-btn flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs sm:text-sm font-medium min-w-0">
+            <span>Week</span>
+            <span id="countWeek" class="rounded-full px-1.5 py-0.2 text-[10px] bg-white/10 tabular-nums">0</span>
+          </button>
+          <button data-scope="month" class="scope-tab spring-btn flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs sm:text-sm font-medium min-w-0">
+            <span>Month</span>
+            <span id="countMonth" class="rounded-full px-1.5 py-0.2 text-[10px] bg-white/10 tabular-nums">0</span>
+          </button>
+        </div>
+
+        <!-- Add Task Form -->
+        <form id="taskForm" class="rounded-xl bg-black/45 border border-white/10 p-3 space-y-2.5">
+          <input id="taskTitleInput" type="text" required placeholder="Add a task (press N to focus)..." class="w-full rounded-lg bg-black/60 border border-white/10 px-3 py-2 text-sm text-[#F5F5F7] placeholder-[#86868B]/60 focus:outline-none focus:border-[#E5C158]" />
+          <div class="flex flex-wrap items-center gap-2 max-w-full min-w-0">
+            <select id="taskScopeInput" class="rounded-lg bg-black/60 border border-white/10 px-2.5 py-1.5 text-xs text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]">
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <select id="taskPriorityInput" class="rounded-lg bg-black/60 border border-white/10 px-2.5 py-1.5 text-xs text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]">
+              <option value="normal">Normal (+15 XP)</option>
+              <option value="high">High (+30 XP)</option>
+            </select>
+            <div class="flex items-center gap-1.5 rounded-lg bg-black/60 border border-white/10 px-2 py-1 min-w-0">
+              <i data-lucide="alarm-clock" class="h-3.5 w-3.5 text-[#E5C158]"></i>
+              <input id="taskTimeInput" type="time" title="Optional alarm time" class="bg-transparent text-xs text-[#F5F5F7] focus:outline-none" />
+            </div>
+          </div>
+          <div class="flex items-center gap-2 min-w-0">
+            <select id="taskBlockLinkInput" class="min-w-0 max-w-full flex-1 rounded-lg bg-black/60 border border-white/10 px-2.5 py-1.5 text-xs text-[#86868B] focus:outline-none focus:border-[#E5C158]">
+              <option value="">Link to routine block (optional)</option>
+            </select>
+            <button type="submit" class="spring-btn inline-flex items-center gap-1 rounded-lg apple-pro-btn px-3.5 py-1.5 text-xs font-semibold text-white">
+              <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+              Add
+            </button>
+          </div>
+        </form>
+
+        <!-- Task List -->
+        <div id="taskList" class="space-y-2 max-h-[420px] overflow-y-auto pr-1"></div>
+
+        <!-- Collapsible Completed Today Log -->
+        <div class="rounded-xl border border-white/10 bg-black/40 overflow-hidden">
+          <button id="toggleCompletedLogBtn" type="button" class="spring-btn w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-[#F5F5F7] hover:bg-white/5 min-w-0">
+            <span class="flex items-center gap-2 min-w-0">
+              <i data-lucide="check-circle-2" class="h-4 w-4 text-[#30D158]"></i>
+              Completed Today (<span id="completedTodayCount" class="tabular-nums">0</span>)
+            </span>
+            <i id="completedLogChevron" data-lucide="chevron-down" class="h-4 w-4 text-[#86868B] transition-transform"></i>
+          </button>
+          <div id="completedTodayBody" class="hidden border-t border-white/5 px-3.5 py-2.5 space-y-1.5 max-h-48 overflow-y-auto"></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Bottom: Consistency Heatmap Grid -->
+    <section class="glass-panel min-w-0 w-full rounded-3xl p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 min-w-0">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 min-w-0">
+            <h2 class="text-base sm:text-lg font-semibold text-[#F5F5F7]">Consistency Heatmap</h2>
+            <span id="demoHistoryBadge" class="hidden rounded-full bg-[#E5C158]/15 border border-[#E5C158]/30 px-2.5 py-0.5 text-[11px] font-medium text-[#E5C158]">
+              Includes 14d demo history
+            </span>
+          </div>
+          <p class="text-xs text-[#86868B] mt-0.5">Click any square to inspect that day’s execution log, percentage, and XP earned</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 min-w-0">
+          <button id="clearDemoBtn" class="spring-btn hidden px-2.5 py-1.5 rounded-xl text-xs font-medium bg-[#FF453A]/15 hover:bg-[#FF453A]/25 text-[#FF453A] border border-[#FF453A]/30">
+            Clear Demo Data
+          </button>
+          <div class="inline-flex rounded-xl seg-track p-0.5">
+            <button data-range="90" class="heat-range-btn spring-btn px-2.5 py-1 rounded-lg text-xs font-medium">90 Days</button>
+            <button data-range="365" class="heat-range-btn spring-btn px-2.5 py-1 rounded-lg text-xs font-medium">365 Days</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full max-w-full overflow-x-auto overscroll-x-contain pb-2">
+        <div class="inline-block min-w-max">
+          <div class="flex items-center mb-1.5 pl-8 min-w-0">
+            <div id="heatmapMonthRow" class="flex gap-1 text-[10px] font-medium text-[#86868B] min-w-0"></div>
+          </div>
+          <div class="flex items-start gap-2 min-w-0">
+            <div class="flex flex-col justify-between h-[108px] py-[2px] text-[10px] font-medium text-[#86868B] w-6 text-right select-none shrink-0">
+              <span class="opacity-0">Sun</span>
+              <span>Mon</span>
+              <span class="opacity-0">Tue</span>
+              <span>Wed</span>
+              <span class="opacity-0">Thu</span>
+              <span>Fri</span>
+              <span class="opacity-0">Sat</span>
+            </div>
+            <div id="heatmapGrid" class="inline-flex gap-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#86868B] min-w-0">
+        <div class="flex flex-wrap items-center gap-4 min-w-0">
+          <span class="flex items-center gap-1.5 min-w-0"><span class="inline-block w-3 h-3 rounded-sm bg-[#30D158]"></span> 80%–100% Crushed it</span>
+          <span class="flex items-center gap-1.5 min-w-0"><span class="inline-block w-3 h-3 rounded-sm bg-[#E5C158]"></span> 40%–79% Partial</span>
+          <span class="flex items-center gap-1.5 min-w-0"><span class="inline-block w-3 h-3 rounded-sm bg-[#FF453A]"></span> 1%–39% Bad day</span>
+          <span class="flex items-center gap-1.5 min-w-0"><span class="inline-block w-3 h-3 rounded-sm bg-[#1C1C1E] border border-white/10"></span> No data</span>
+        </div>
+        <span id="heatmapSummaryText" class="text-[#F5F5F7] font-medium tabular-nums"></span>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'daily_routine_map_v2';
+      const ACCOUNTS_KEY = 'daily_routine_map_accounts_v1';
+      const ACTIVE_USER_KEY = 'daily_routine_map_active_user';
+      const GIST_CFG_KEY = 'daily_routine_map_gist_cfg';
+
+      function getActiveUser() {
+        try {
+          return localStorage.getItem(ACTIVE_USER_KEY) || '';
+        } catch (_) {
+          return '';
+        }
+      }
+
+      function getActiveStorageKey() {
+        const u = getActiveUser();
+        return u ? `${STORAGE_KEY}_user_${u}` : STORAGE_KEY;
+      }
+
+      function getActiveIdbKey() {
+        const u = getActiveUser();
+        return u ? `user_${u}` : 'primary';
+      }
+      const PX_PER_HOUR = 64;
+      const PX_PER_MIN = PX_PER_HOUR / 60;
+
+      const CATEGORY_META = {
+        classes: { label: 'University & Classes', color: '#E5C158', badge: 'bg-[#E5C158]/15 text-[#E5C158] border-[#E5C158]/30', dot: 'bg-[#E5C158]' },
+        finance: { label: 'Markets & Quant', color: '#E5C158', badge: 'bg-[#E5C158]/15 text-[#E5C158] border-[#E5C158]/30', dot: 'bg-[#E5C158]' },
+        building: { label: 'Deep Work & Projects', color: '#30D158', badge: 'bg-[#30D158]/15 text-[#30D158] border-[#30D158]/30', dot: 'bg-[#30D158]' },
+        wellness: { label: 'Health & Meals', color: '#BF5AF2', badge: 'bg-[#BF5AF2]/15 text-[#BF5AF2] border-[#BF5AF2]/30', dot: 'bg-[#BF5AF2]' },
+        rest: { label: 'Wind-Down & Sleep', color: '#86868B', badge: 'bg-white/10 text-[#F5F5F7] border-white/15', dot: 'bg-[#86868B]' }
+      };
+
+      const LEVEL_TITLES = [
+        'Routine Initiate',
+        'Time Architect',
+        'Focus Operator',
+        'Execution Architect',
+        'Quant Tactician',
+        'Alpha Compounder',
+        'Grandmaster of Flow'
+      ];
+
+      const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const DEFAULT_WEEKDAY = [
+        { id: 'w1', start: '06:30', end: '07:15', title: 'Wake Up, Hydration & Morning Mobility', category: 'wellness', notes: 'Sunlight, water, 15-min stretch', alarm: true, offset: 0, done: false },
+        { id: 'w2', start: '07:15', end: '08:15', title: 'Workout & Shower', category: 'wellness', notes: 'Strength or cardio session', alarm: true, offset: 5, done: false },
+        { id: 'w3', start: '08:15', end: '09:00', title: 'Breakfast & Nifty 50 Pre-Market Scan', category: 'finance', notes: 'Check overnight cues & watchlist', alarm: true, offset: 0, done: false },
+        { id: 'w4', start: '09:00', end: '13:00', title: 'Christ University Classes & Campus', category: 'classes', notes: 'Lectures, notes & peer discussions', alarm: true, offset: 10, done: false },
+        { id: 'w5', start: '13:00', end: '14:00', title: 'Lunch & Mid-Day Reset', category: 'wellness', notes: 'Screen-free meal & short walk', alarm: true, offset: 0, done: false },
+        { id: 'w6', start: '14:00', end: '15:45', title: 'Afternoon Classes / Market Close Check', category: 'classes', notes: 'Nifty 50 close at 3:30 PM IST', alarm: true, offset: 5, done: false },
+        { id: 'w7', start: '16:00', end: '18:00', title: 'Project Sprint: Trading App & ApexSight', category: 'building', notes: 'AI-assisted architecture, testing & UI', alarm: true, offset: 5, done: false },
+        { id: 'w8', start: '18:00', end: '19:00', title: 'Evening Break & Walk', category: 'wellness', notes: 'Decompress away from screens', alarm: false, offset: 0, done: false },
+        { id: 'w9', start: '19:00', end: '20:30', title: 'Quant Finance & IB/PE Prep', category: 'finance', notes: 'Probability, mental math, valuation drills', alarm: true, offset: 5, done: false },
+        { id: 'w10', start: '20:30', end: '21:30', title: 'Dinner & Family / Friends Time', category: 'wellness', notes: 'Relaxed dinner & catch-up', alarm: false, offset: 0, done: false },
+        { id: 'w11', start: '21:30', end: '22:30', title: 'Review Tasks & Light Reading', category: 'rest', notes: 'Plan tomorrow’s top 3 priorities', alarm: true, offset: 0, done: false },
+        { id: 'w12', start: '22:30', end: '06:30', title: 'Sleep (8h Recovery)', category: 'rest', notes: 'Phone on DND, consistent sleep window', alarm: true, offset: 10, done: false }
+      ];
+
+      const DEFAULT_WEEKEND = [
+        { id: 'e1', start: '07:30', end: '08:30', title: 'Slow Wake, Coffee & Mobility', category: 'wellness', notes: 'No rush, light stretching', alarm: true, offset: 0, done: false },
+        { id: 'e2', start: '08:30', end: '10:00', title: 'Long Workout / Outdoor Sport', category: 'wellness', notes: 'Run, gym, or sport', alarm: true, offset: 5, done: false },
+        { id: 'e3', start: '10:30', end: '13:00', title: 'Deep Build: Algo Trading / Dashboard', category: 'building', notes: 'Uninterrupted feature sprint', alarm: true, offset: 5, done: false },
+        { id: 'e4', start: '13:00', end: '14:30', title: 'Lunch & Rest', category: 'wellness', notes: 'Relaxed afternoon meal', alarm: false, offset: 0, done: false },
+        { id: 'e5', start: '14:30', end: '16:30', title: 'Weekly Market Review & Quant Study', category: 'finance', notes: 'Nifty 50 sector trends & case prep', alarm: true, offset: 5, done: false },
+        { id: 'e6', start: '16:30', end: '20:30', title: 'Social / Personal Time', category: 'wellness', notes: 'Friends, errands, hobbies', alarm: false, offset: 0, done: false },
+        { id: 'e7', start: '20:30', end: '22:00', title: 'Dinner & Weekly Reset', category: 'rest', notes: 'Plan Week & Month tasks', alarm: true, offset: 0, done: false },
+        { id: 'e8', start: '22:30', end: '07:30', title: 'Sleep', category: 'rest', notes: 'Full recovery for Monday', alarm: true, offset: 10, done: false }
+      ];
+
+      const DEFAULT_TASKS = [
+        { id: 't1', title: 'Review Nifty 50 top gainers & laggards', scope: 'day', priority: 'high', time: '15:40', blockId: 'w6', done: false },
+        { id: 't2', title: 'Practice 20 quant probability / brainteaser questions', scope: 'day', priority: 'normal', time: '19:05', blockId: 'w9', done: false },
+        { id: 't3', title: 'Debug live price feed for 300-stock dashboard', scope: 'week', priority: 'high', time: '', blockId: '', done: false },
+        { id: 't4', title: 'Update ApexSight Excel parser edge cases', scope: 'week', priority: 'normal', time: '', blockId: '', done: false },
+        { id: 't5', title: 'Finalize IB / Quant dual-track resume & target list', scope: 'month', priority: 'high', time: '', blockId: '', done: false }
+      ];
+
+      function getDateStr(date = new Date()) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+
+      function addDaysStr(dateStr, days) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        dt.setDate(dt.getDate() + days);
+        return getDateStr(dt);
+      }
+
+      function generateDemoHistory() {
+        const today = getDateStr();
+        const samplePcts = [92, 85, 64, 88, 100, 32, 75, 90, 82, 55, 95, 86, 28, 84];
+        const history = {};
+        for (let i = 14; i >= 1; i--) {
+          const dStr = addDaysStr(today, -i);
+          const targetPct = samplePcts[14 - i];
+          const total = 14;
+          const completedCount = Math.max(1, Math.round((targetPct / 100) * total));
+          const items = [];
+          DEFAULT_WEEKDAY.forEach((b, idx) => {
+            items.push({ title: b.title, kind: 'block', done: idx < completedCount - 2, xp: 25 });
+          });
+          DEFAULT_TASKS.slice(0, 2).forEach((t, idx) => {
+            items.push({ title: t.title, kind: 'task', done: idx < Math.max(0, completedCount - 12), xp: t.priority === 'high' ? 30 : 15 });
+          });
+          const doneActual = items.filter((x) => x.done).length;
+          const xpEarned = items.filter((x) => x.done).reduce((s, x) => s + x.xp, 0);
+          history[dStr] = {
+            date: dStr,
+            pct: Math.round((doneActual / items.length) * 100),
+            doneCount: doneActual,
+            totalCount: items.length,
+            xpEarned,
+            isDemo: true,
+            items
+          };
+        }
+        return history;
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(getActiveStorageKey());
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.routines && parsed.tasks) {
+              parsed.history = parsed.history || {};
+              parsed.xp = typeof parsed.xp === 'number' ? parsed.xp : 0;
+              parsed.heatRange = parsed.heatRange || 90;
+              parsed.lastActiveDate = parsed.lastActiveDate || getDateStr();
+              parsed.awardedXpItems = parsed.awardedXpItems || {};
+              parsed.updatedAt = parsed.updatedAt || Date.now();
+              return parsed;
+            }
+          }
+        } catch (_) {}
+        return {
+          mode: 'weekday',
+          catFilter: 'all',
+          taskScope: 'day',
+          taskFilter: 'all',
+          soundEnabled: true,
+          xp: 420,
+          heatRange: 90,
+          lastActiveDate: getDateStr(),
+          completedLogOpen: false,
+          awardedXpItems: {},
+          updatedAt: Date.now(),
+          routines: {
+            weekday: JSON.parse(JSON.stringify(DEFAULT_WEEKDAY)),
+            weekend: JSON.parse(JSON.stringify(DEFAULT_WEEKEND))
+          },
+          tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+          firedToday: {},
+          history: generateDemoHistory()
+        };
+      }
+
+      let state = loadState();
+      let audioCtx = null;
+      let activeAlarmTimer = null;
+      let lastActiveBlockId = null;
+      let lastCelebrated100Date = null;
+      let editingTaskId = null;
+      let undoCallback = null;
+      let focusModeOpen = false;
+      let focusChimeFiredId = null;
+      let swRegistration = null;
+      let lastTickTimestamp = Date.now();
+      let gistDebounceTimer = null;
+      let pendingIncomingState = null;
+      let localFileHandle = null;
+      let persistRequested = false;
+
+      // --- 1. Dual-Engine Persistence (IndexedDB + localStorage) ---
+      const IDB_NAME = 'RoutineMapDB';
+      const IDB_STORE = 'appState';
+      const IDB_KEY = 'primary';
+
+      function openRoutineDb() {
+        return new Promise((resolve, reject) => {
+          if (!('indexedDB' in window)) return reject(new Error('No IndexedDB'));
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE);
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function writeToIndexedDb(snapshot) {
+        try {
+          const db = await openRoutineDb();
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put(JSON.stringify(snapshot), getActiveIdbKey());
+        } catch (_) {}
+      }
+
+      async function readFromIndexedDb() {
+        try {
+          const db = await openRoutineDb();
+          return await new Promise((resolve) => {
+            const tx = db.transaction(IDB_STORE, 'readonly');
+            const req = tx.objectStore(IDB_STORE).get(getActiveIdbKey());
+            req.onsuccess = () => {
+              try {
+                resolve(req.result ? JSON.parse(req.result) : null);
+              } catch (_) {
+                resolve(null);
+              }
+            };
+            req.onerror = () => resolve(null);
+          });
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function hydrateFromIndexedDbIfNeeded() {
+        let hasLocal = false;
+        try {
+          hasLocal = Boolean(localStorage.getItem(getActiveStorageKey()));
+        } catch (_) {}
+        if (hasLocal) return;
+        const idbState = await readFromIndexedDb();
+        if (idbState && idbState.routines && idbState.tasks) {
+          idbState.awardedXpItems = idbState.awardedXpItems || {};
+          state = idbState;
+          try {
+            localStorage.setItem(getActiveStorageKey(), JSON.stringify(state));
+          } catch (_) {}
+          checkMidnightRollover();
+          renderAll();
+          showToast('Restored your routine & XP from IndexedDB backup.', 'info');
+        }
+      }
+
+      // --- 2. Persistent Storage Permission ---
+      function requestPersistentStorage() {
+        if (persistRequested) return;
+        persistRequested = true;
+        try {
+          if (navigator.storage && typeof navigator.storage.persist === 'function') {
+            navigator.storage.persist().catch(() => {});
+          }
+        } catch (_) {}
+      }
+
+      // --- 4. File System Access API Auto-Save ---
+      async function writeToLinkedLocalFile(snapshot) {
+        if (!localFileHandle) return;
+        try {
+          const writable = await localFileHandle.createWritable();
+          await writable.write(JSON.stringify(snapshot, null, 2));
+          await writable.close();
+        } catch (_) {}
+      }
+
+      function saveState(skipCloud = false) {
+        state.updatedAt = Date.now();
+        try {
+          localStorage.setItem(getActiveStorageKey(), JSON.stringify(state));
+        } catch (_) {}
+        writeToIndexedDb(state);
+        writeToLinkedLocalFile(state);
+        if (!skipCloud) {
+          scheduleGistPush();
+          scheduleSupabasePush();
+        }
+      }
+
+      // --- 3. Inline PWA Manifest & Service Worker Registration ---
+      function initPwaAndServiceWorker() {
+        try {
+          const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#000"/><circle cx="64" cy="64" r="40" fill="none" stroke="#E5C158" stroke-width="8"/><path d="M64 36v28l18 12" stroke="#E5C158" stroke-width="8" stroke-linecap="round" fill="none"/></svg>`;
+          const iconUri = 'data:image/svg+xml;base64,' + btoa(iconSvg);
+          const manifest = {
+            name: 'Daily Routine Map & Task Planner',
+            short_name: 'Routine Map',
+            start_url: '.',
+            display: 'standalone',
+            background_color: '#000000',
+            theme_color: '#000000',
+            icons: [{ src: iconUri, sizes: '128x128', type: 'image/svg+xml' }]
+          };
+          const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+          const mLink = document.createElement('link');
+          mLink.rel = 'manifest';
+          mLink.href = URL.createObjectURL(mBlob);
+          document.head.appendChild(mLink);
+        } catch (_) {}
+
+        try {
+          if ('serviceWorker' in navigator) {
+            const swCode = `
+              self.addEventListener('install', () => self.skipWaiting());
+              self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+              self.addEventListener('notificationclick', (e) => {
+                e.notification.close();
+                const action = e.action || 'open';
+                e.waitUntil(
+                  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+                    if (clients.length) {
+                      clients[0].focus();
+                      clients[0].postMessage({ type: 'SW_ALARM_ACTION', action, data: e.notification.data || {} });
+                    }
+                  })
+                );
+              });
+            `;
+            const swBlob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl).then((reg) => {
+              swRegistration = reg;
+            }).catch(() => {});
+
+            navigator.serviceWorker.addEventListener('message', (ev) => {
+              if (ev.data && ev.data.type === 'SW_ALARM_ACTION') {
+                if (ev.data.action === 'snooze') {
+                  const d = ev.data.data || {};
+                  showToast('Snoozed for 5 minutes.', 'info');
+                  setTimeout(() => triggerAlarm(d.title || 'Routine Alarm', d.desc || ''), 5 * 60 * 1000);
+                } else if (ev.data.action === 'focus') {
+                  openFocusMode();
+                }
+              }
+            });
+          }
+        } catch (_) {}
+      }
+
+      // --- 2. Cross-Device Sync (Gzip URL Hash + GitHub Gist Bridge) ---
+      function bytesToBase64Url(bytes) {
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      }
+
+      function base64UrlToBytes(str) {
+        let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      }
+
+      async function compressStateToKey(obj) {
+        const json = JSON.stringify(obj);
+        try {
+          if (typeof CompressionStream !== 'undefined') {
+            const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+            const buf = await new Response(stream).arrayBuffer();
+            return 'gz_' + bytesToBase64Url(new Uint8Array(buf));
+          }
+        } catch (_) {}
+        const bytes = new TextEncoder().encode(json);
+        return 'raw_' + bytesToBase64Url(bytes);
+      }
+
+      async function decompressKeyToState(key) {
+        const clean = key.trim().replace(/^.*#sync=/, '');
+        if (clean.startsWith('gz_') && typeof DecompressionStream !== 'undefined') {
+          const bytes = base64UrlToBytes(clean.slice(3));
+          const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+          const text = await new Response(stream).text();
+          return JSON.parse(text);
+        }
+        if (clean.startsWith('raw_')) {
+          const bytes = base64UrlToBytes(clean.slice(4));
+          return JSON.parse(new TextDecoder().decode(bytes));
+        }
+        const bytes = base64UrlToBytes(clean);
+        return JSON.parse(new TextDecoder().decode(bytes));
+      }
+
+      function loadGistCfg() {
+        try {
+          const raw = localStorage.getItem(GIST_CFG_KEY);
+          return raw ? JSON.parse(raw) : { token: '', gistId: '' };
+        } catch (_) {
+          return { token: '', gistId: '' };
+        }
+      }
+
+      function saveGistCfg(cfg) {
+        try {
+          localStorage.setItem(GIST_CFG_KEY, JSON.stringify(cfg));
+        } catch (_) {}
+      }
+
+      function updateCloudPill(text, show = true) {
+        const pill = document.getElementById('cloudSyncPill');
+        pill.textContent = text;
+        pill.classList.toggle('hidden', !show);
+      }
+
+      function scheduleGistPush() {
+        const cfg = loadGistCfg();
+        if (!cfg.token) return;
+        if (gistDebounceTimer) clearTimeout(gistDebounceTimer);
+        updateCloudPill('Syncing…', true);
+        gistDebounceTimer = setTimeout(() => pushToGist(cfg), 2000);
+      }
+
+      async function pushToGist(cfg) {
+        if (!cfg || !cfg.token) return;
+        try {
+          const bodyPayload = {
+            description: 'Daily Routine Map & Task Planner Sync',
+            public: false,
+            files: { 'daily-routine-map-sync.json': { content: JSON.stringify(state) } }
+          };
+          const url = cfg.gistId ? `https://api.github.com/gists/${cfg.gistId}` : 'https://api.github.com/gists';
+          const method = cfg.gistId ? 'PATCH' : 'POST';
+          const res = await fetch(url, {
+            method,
+            headers: {
+              Authorization: `Bearer ${cfg.token}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/vnd.github+json'
+            },
+            body: JSON.stringify(bodyPayload)
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          if (data.id && data.id !== cfg.gistId) {
+            cfg.gistId = data.id;
+            saveGistCfg(cfg);
+            document.getElementById('gistIdInput').value = data.id;
+          }
+          updateCloudPill('Cloud Synced', true);
+          document.getElementById('gistStatusText').textContent = `Synced at ${new Date().toLocaleTimeString()}`;
+        } catch (err) {
+          updateCloudPill('Sync Error', true);
+          document.getElementById('gistStatusText').textContent = `Sync failed: ${err.message}`;
+        }
+      }
+
+      async function pullFromGist(silent = true) {
+        const cfg = loadGistCfg();
+        if (!cfg.token || !cfg.gistId) return;
+        try {
+          const res = await fetch(`https://api.github.com/gists/${cfg.gistId}`, {
+            headers: {
+              Authorization: `Bearer ${cfg.token}`,
+              Accept: 'application/vnd.github+json'
+            }
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const file = data.files && data.files['daily-routine-map-sync.json'];
+          if (!file || !file.content) return;
+          const remote = JSON.parse(file.content);
+          if (remote && remote.routines && (remote.updatedAt || 0) > (state.updatedAt || 0)) {
+            remote.awardedXpItems = remote.awardedXpItems || {};
+            state = remote;
+            saveState(true);
+            renderAll();
+            updateCloudPill('Cloud Synced', true);
+            if (!silent) showToast('Pulled newer routine state from Cloud Gist!', 'success');
+          } else {
+            updateCloudPill('Cloud Synced', true);
+          }
+        } catch (_) {}
+      }
+
+      function showIncomingSyncPreview(incoming) {
+        if (!incoming || !incoming.routines || !incoming.tasks) {
+          showToast('Invalid sync snapshot.', 'warn');
+          return;
+        }
+        pendingIncomingState = incoming;
+        const lvl = getLevelInfo(incoming.xp || 0);
+        const wCount = (incoming.routines.weekday || []).length;
+        const tCount = (incoming.tasks || []).length;
+        document.getElementById('incomingSyncSummary').innerHTML = `
+          <div><strong>Level:</strong> Lvl ${lvl.lvl} · ${lvl.title} (${incoming.xp || 0} XP)</div>
+          <div><strong>Weekday Blocks:</strong> ${wCount} blocks</div>
+          <div><strong>Tasks:</strong> ${tCount} tasks across Day/Week/Month</div>
+          <div><strong>Last Updated:</strong> ${incoming.updatedAt ? new Date(incoming.updatedAt).toLocaleString() : 'Unknown'}</div>
+        `;
+        const modal = document.getElementById('incomingSyncModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+
+      // --- Gamification & Anti-XP-Farming Ledger ---
+      function getLevelInfo(xp) {
+        let lvl = 1;
+        let threshold = 100;
+        let prevThreshold = 0;
+        while (xp >= threshold) {
+          lvl++;
+          prevThreshold = threshold;
+          threshold += lvl * 100;
+        }
+        const title = LEVEL_TITLES[Math.min(lvl - 1, LEVEL_TITLES.length - 1)];
+        const inLevelXp = xp - prevThreshold;
+        const neededXp = threshold - prevThreshold;
+        const pct = Math.min(100, Math.round((inLevelXp / neededXp) * 100));
+        return { lvl, title, inLevelXp, neededXp, pct };
+      }
+
+      function toggleItemXp(itemKey, isDone, pts, reason) {
+        const today = getDateStr();
+        state.awardedXpItems = state.awardedXpItems || {};
+        state.awardedXpItems[today] = state.awardedXpItems[today] || {};
+        const ledger = state.awardedXpItems[today];
+        const prevLvl = getLevelInfo(state.xp).lvl;
+
+        if (isDone) {
+          if (!ledger[itemKey]) {
+            ledger[itemKey] = pts;
+            state.xp = Math.max(0, state.xp + pts);
+            const card = document.getElementById('xpCard');
+            card.classList.remove('xp-bump');
+            void card.offsetWidth;
+            card.classList.add('xp-bump');
+
+            const nextLvl = getLevelInfo(state.xp).lvl;
+            if (nextLvl > prevLvl) {
+              fireConfetti();
+              showToast(`Level Up! You reached Lvl ${nextLvl} · ${getLevelInfo(state.xp).title}`, 'success');
+            } else if (reason) {
+              showToast(`+${pts} XP · ${reason}`, 'success');
+            }
+          }
+        } else {
+          if (ledger[itemKey]) {
+            const revokePts = ledger[itemKey];
+            delete ledger[itemKey];
+            state.xp = Math.max(0, state.xp - revokePts);
+          }
+        }
+      }
+
+      function fireConfetti() {
+        try {
+          if (typeof confetti === 'function') {
+            confetti({ particleCount: 70, spread: 65, origin: { y: 0.7 } });
+          }
+        } catch (_) {}
+      }
+
+      function computeTodaySnapshot() {
+        const blocks = getCurrentBlocks();
+        const dayTasks = state.tasks.filter((t) => t.scope === 'day');
+        const items = [];
+        blocks.forEach((b) => items.push({ title: b.title, kind: 'block', done: Boolean(b.done), xp: 25 }));
+        dayTasks.forEach((t) => items.push({ title: t.title, kind: 'task', done: Boolean(t.done), xp: t.priority === 'high' ? 30 : 15 }));
+        const totalCount = items.length;
+        const doneCount = items.filter((x) => x.done).length;
+        const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+        const xpEarned = items.filter((x) => x.done).reduce((s, x) => s + x.xp, 0);
+        return { date: getDateStr(), pct, doneCount, totalCount, xpEarned, isDemo: false, items };
+      }
+
+      function syncTodayHistory() {
+        const snap = computeTodaySnapshot();
+        state.history[snap.date] = snap;
+        if (snap.pct === 100 && snap.totalCount > 0 && lastCelebrated100Date !== snap.date) {
+          lastCelebrated100Date = snap.date;
+          fireConfetti();
+          showToast('100% Daily Execution! You crushed today.', 'success');
+        }
+      }
+
+      function checkMidnightRollover() {
+        const today = getDateStr();
+        if (state.lastActiveDate !== today) {
+          if (!state.history[state.lastActiveDate]) {
+            const snap = computeTodaySnapshot();
+            snap.date = state.lastActiveDate;
+            state.history[state.lastActiveDate] = snap;
+          }
+          ['weekday', 'weekend'].forEach((m) => {
+            (state.routines[m] || []).forEach((b) => { b.done = false; });
+          });
+          const cleanedFired = {};
+          Object.keys(state.firedToday || {}).forEach((k) => {
+            if (k.startsWith(today)) cleanedFired[k] = true;
+          });
+          state.firedToday = cleanedFired;
+          state.lastActiveDate = today;
+          saveState();
+          renderAll();
+          showToast('New day started — daily routine blocks reset.', 'info');
+        }
+      }
+
+      function calculateStreak() {
+        const today = getDateStr();
+        let streak = 0;
+        const todayEntry = state.history[today];
+        if (todayEntry && todayEntry.pct >= 40) streak++;
+        for (let i = 1; i <= 365; i++) {
+          const dStr = addDaysStr(today, -i);
+          const entry = state.history[dStr];
+          if (entry && entry.pct >= 40) streak++;
+          else break;
+        }
+        return streak;
+      }
+
+      function toMinutes(hhmm) {
+        const [h, m] = hhmm.split(':').map(Number);
+        return h * 60 + m;
+      }
+
+      function minutesToHhmm(totalMins) {
+        const m = ((totalMins % 1440) + 1440) % 1440;
+        const hh = String(Math.floor(m / 60)).padStart(2, '0');
+        const mm = String(m % 60).padStart(2, '0');
+        return `${hh}:${mm}`;
+      }
+
+      function formatTime12(hhmm) {
+        if (!hhmm) return '';
+        const [hStr, mStr] = hhmm.split(':');
+        let h = parseInt(hStr, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${h}:${mStr} ${ampm}`;
+      }
+
+      function durationMinutes(start, end) {
+        let s = toMinutes(start);
+        let e = toMinutes(end);
+        if (e <= s) e += 1440;
+        return e - s;
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function showToast(msg, type = 'info', onUndo = null) {
+        const container = document.getElementById('toastContainer');
+        const colors = {
+          info: 'border-[#E5C158]/40 bg-[#1C1C1E]/95 text-[#F5F5F7]',
+          success: 'border-[#30D158]/40 bg-[#1C1C1E]/95 text-[#F5F5F7]',
+          warn: 'border-[#E5C158]/40 bg-[#1C1C1E]/95 text-[#F5F5F7]'
+        };
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto flex items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-xs sm:text-sm shadow-2xl backdrop-blur-xl transition-all ${colors[type] || colors.info}`;
+        const span = document.createElement('span');
+        span.textContent = msg;
+        el.appendChild(span);
+
+        if (typeof onUndo === 'function') {
+          undoCallback = onUndo;
+          const btn = document.createElement('button');
+          btn.textContent = 'Undo';
+          btn.className = 'spring-btn shrink-0 rounded-lg bg-white/15 hover:bg-white/25 px-2.5 py-1 text-xs font-semibold text-white';
+          btn.addEventListener('click', () => {
+            if (undoCallback) {
+              undoCallback();
+              undoCallback = null;
+            }
+            el.remove();
+          });
+          el.appendChild(btn);
+        }
+
+        container.appendChild(el);
+        setTimeout(() => {
+          el.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => el.remove(), 250);
+        }, onUndo ? 5500 : 3200);
+      }
+
+      function playChime() {
+        if (!state.soundEnabled) return;
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          if (!audioCtx) audioCtx = new AudioContextClass();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.14);
+            gain.gain.setValueAtTime(0.001, audioCtx.currentTime + idx * 0.14);
+            gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + idx * 0.14 + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.14 + 0.45);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + idx * 0.14);
+            osc.stop(audioCtx.currentTime + idx * 0.14 + 0.5);
+          });
+        } catch (_) {}
+      }
+
+      function triggerAlarm(title, desc) {
+        playChime();
+        const modal = document.getElementById('alarmModal');
+        document.getElementById('alarmModalTitle').textContent = title;
+        document.getElementById('alarmModalDesc').textContent = desc;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        try {
+          if (swRegistration && 'Notification' in window && Notification.permission === 'granted') {
+            swRegistration.showNotification(title, {
+              body: desc,
+              data: { title, desc },
+              actions: [
+                { action: 'snooze', title: 'Snooze 5m' },
+                { action: 'focus', title: 'Open Focus Mode' }
+              ]
+            });
+          } else if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, { body: desc });
+          }
+        } catch (_) {}
+      }
+
+      function closeAlarmModal() {
+        document.getElementById('alarmModal').classList.add('hidden');
+        document.getElementById('alarmModal').classList.remove('flex');
+      }
+
+      function getCurrentBlocks() {
+        const list = state.routines[state.mode] || [];
+        return [...list].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+      }
+
+      function detectOverlaps(blocks) {
+        const overlaps = {};
+        const intervals = blocks.map((b) => {
+          const s = toMinutes(b.start);
+          let e = toMinutes(b.end);
+          if (e <= s) e += 1440;
+          return { id: b.id, title: b.title, s, e };
+        });
+        for (let i = 0; i < intervals.length; i++) {
+          for (let j = i + 1; j < intervals.length; j++) {
+            const a = intervals[i];
+            const b = intervals[j];
+            if (a.s < b.e && b.s < a.e) {
+              overlaps[a.id] = overlaps[a.id] || [];
+              overlaps[b.id] = overlaps[b.id] || [];
+              overlaps[a.id].push(b.title);
+              overlaps[b.id].push(a.title);
+            }
+          }
+        }
+        return overlaps;
+      }
+
+      function isBlockActive(block, nowMin) {
+        const s = toMinutes(block.start);
+        const e = toMinutes(block.end);
+        return e <= s ? (nowMin >= s || nowMin < e) : (nowMin >= s && nowMin < e);
+      }
+
+      function getBlockProgress(block, now) {
+        const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        const sSec = toMinutes(block.start) * 60;
+        let eSec = toMinutes(block.end) * 60;
+        let curSec = nowSec;
+        if (eSec <= sSec) {
+          eSec += 86400;
+          if (curSec < sSec) curSec += 86400;
+        }
+        const total = Math.max(1, eSec - sSec);
+        const elapsed = Math.max(0, Math.min(total, curSec - sSec));
+        const rem = Math.max(0, total - elapsed);
+        const pct = Math.min(100, Math.round((elapsed / total) * 100));
+        const remHrs = Math.floor(rem / 3600);
+        const remMins = Math.floor((rem % 3600) / 60);
+        const remSecs = rem % 60;
+
+        let label = '';
+        if (remHrs > 0) label = `${remHrs}h ${remMins}m left`;
+        else if (remMins > 0) label = `${remMins}m left`;
+        else label = `${remSecs}s left`;
+
+        const clockStr = remHrs > 0
+          ? `${String(remHrs).padStart(2, '0')}:${String(remMins).padStart(2, '0')}:${String(remSecs).padStart(2, '0')}`
+          : `${String(remMins).padStart(2, '0')}:${String(remSecs).padStart(2, '0')}`;
+
+        return { pct, label, clockStr, rem };
+      }
+
+      function renderFocusModeContent() {
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const blocks = getCurrentBlocks();
+        const activeBlock = blocks.find((b) => isBlockActive(b, nowMin));
+        if (!activeBlock) {
+          closeFocusMode();
+          return;
+        }
+        document.getElementById('focusBlockTitle').textContent = activeBlock.title;
+        document.getElementById('focusBlockWindow').textContent = `${formatTime12(activeBlock.start)} – ${formatTime12(activeBlock.end)}`;
+        document.getElementById('focusMuteLabel').textContent = state.soundEnabled ? 'Sound ON' : 'Muted';
+
+        const linked = state.tasks.filter((t) => t.blockId === activeBlock.id);
+        const listEl = document.getElementById('focusLinkedTasks');
+        if (!linked.length) {
+          listEl.innerHTML = `<p class="text-xs text-[#86868B] py-1">No tasks linked to this block yet. Drag any task onto this block to link it.</p>`;
+        } else {
+          listEl.innerHTML = linked.map((t) => `
+            <button data-focus-task="${t.id}" class="w-full flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/40 hover:bg-white/5 px-3 py-2 text-left text-xs transition">
+              <span class="flex items-center gap-2 min-w-0">
+                <span class="h-4 w-4 rounded border flex items-center justify-center ${t.done ? 'bg-[#30D158] border-[#30D158] text-black' : 'border-white/25'}">
+                  ${t.done ? '✓' : ''}
+                </span>
+                <span class="truncate ${t.done ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}">${escapeHtml(t.title)}</span>
+              </span>
+              <span class="text-[10px] text-[#86868B] shrink-0">+${t.priority === 'high' ? 30 : 15} XP</span>
+            </button>
+          `).join('');
+        }
+        updateFocusRing(activeBlock, now);
+      }
+
+      function updateFocusRing(activeBlock, now) {
+        const prog = getBlockProgress(activeBlock, now);
+        const circ = 502.65;
+        document.getElementById('focusRingCircle').style.strokeDashoffset = String(circ - (prog.pct / 100) * circ);
+        document.getElementById('focusCountdownText').textContent = prog.clockStr;
+        document.getElementById('focusPctSubtext').textContent = `${prog.pct}% elapsed`;
+        if (prog.rem === 0 && focusChimeFiredId !== activeBlock.id) {
+          focusChimeFiredId = activeBlock.id;
+          playChime();
+          showToast(`Focus block "${activeBlock.title}" complete!`, 'success');
+        }
+      }
+
+      function openFocusMode() {
+        focusModeOpen = true;
+        const modal = document.getElementById('focusModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        renderFocusModeContent();
+        lucide.createIcons();
+      }
+
+      function closeFocusMode() {
+        focusModeOpen = false;
+        const modal = document.getElementById('focusModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+
+      // --- Anti-Throttling Watchdog & Lightweight 1s Tick ---
+      function checkAlarmsForMinute(checkMin, todayKey, blocks) {
+        blocks.forEach((b) => {
+          if (!b.alarm) return;
+          const s = toMinutes(b.start);
+          const triggerMin = (s - (b.offset || 0) + 1440) % 1440;
+          const fireKey = `${todayKey}-blk-${b.id}-${triggerMin}`;
+          if (checkMin === triggerMin && !state.firedToday[fireKey]) {
+            state.firedToday[fireKey] = true;
+            saveState();
+            const offsetNote = b.offset ? `Starting in ${b.offset} min` : 'Starting now';
+            triggerAlarm(b.title, `${offsetNote} (${formatTime12(b.start)} – ${formatTime12(b.end)}). ${b.notes || ''}`);
+          }
+        });
+
+        state.tasks.forEach((t) => {
+          if (t.done || !t.time) return;
+          const tMin = toMinutes(t.time);
+          const fireKey = `${todayKey}-tsk-${t.id}-${tMin}`;
+          if (checkMin === tMin && !state.firedToday[fireKey]) {
+            state.firedToday[fireKey] = true;
+            saveState();
+            triggerAlarm(`Task Reminder: ${t.title}`, `Scheduled for ${formatTime12(t.time)} (${t.scope.toUpperCase()}).`);
+          }
+        });
+      }
+
+      function tickClockAndAlarms() {
+        checkMidnightRollover();
+        const nowMs = Date.now();
+        const now = new Date(nowMs);
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        const todayKey = getDateStr(now);
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+
+        document.getElementById('liveClockBadge').textContent = `${formatTime12(`${hh}:${mm}`)} · ${ss}s`;
+
+        const blocks = getCurrentBlocks();
+
+        // Catch-Up Watchdog: if tab was throttled > 70s, scan up to last 10 mins
+        const elapsedMs = nowMs - lastTickTimestamp;
+        if (elapsedMs > 70000) {
+          const missedMins = Math.min(10, Math.floor(elapsedMs / 60000));
+          for (let offset = missedMins; offset >= 1; offset--) {
+            const pastMin = (nowMin - offset + 1440) % 1440;
+            checkAlarmsForMinute(pastMin, todayKey, blocks);
+          }
+        }
+        lastTickTimestamp = nowMs;
+        checkAlarmsForMinute(nowMin, todayKey, blocks);
+
+        let activeBlock = null;
+        let nextAlarmText = 'None left today';
+        let minNextDiff = Infinity;
+
+        blocks.forEach((b) => {
+          if (isBlockActive(b, nowMin)) activeBlock = b;
+          if (b.alarm) {
+            const s = toMinutes(b.start);
+            const triggerMin = (s - (b.offset || 0) + 1440) % 1440;
+            let diff = triggerMin - nowMin;
+            if (diff < 0) diff += 1440;
+            if (diff < minNextDiff) {
+              minNextDiff = diff;
+              const tH = String(Math.floor(triggerMin / 60)).padStart(2, '0');
+              const tM = String(triggerMin % 60).padStart(2, '0');
+              nextAlarmText = `${formatTime12(`${tH}:${tM}`)} · ${b.title.split(' ')[0]}`;
+            }
+          }
+        });
+
+        state.tasks.forEach((t) => {
+          if (!t.done && t.time) {
+            const tMin = toMinutes(t.time);
+            const diff = tMin - nowMin;
+            if (diff >= 0 && diff < minNextDiff) {
+              minNextDiff = diff;
+              nextAlarmText = `${formatTime12(t.time)} · ${t.title.slice(0, 14)}`;
+            }
+          }
+        });
+
+        // Update exact pixel-locked laser line without re-rendering blocks!
+        const exactMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+        const laserEl = document.getElementById('nowLaserLine');
+        const laserPill = document.getElementById('nowLaserTimePill');
+        if (laserEl && laserPill) {
+          laserEl.style.top = `${Math.round(exactMin * PX_PER_MIN)}px`;
+          laserPill.textContent = formatTime12(`${hh}:${mm}`);
+        }
+
+        const statusEl = document.getElementById('currentStatusText');
+        if (activeBlock) {
+          const prog = getBlockProgress(activeBlock, now);
+          statusEl.innerHTML = `Now: <span class="text-[#F5F5F7] font-medium">${escapeHtml(activeBlock.title)}</span> <span class="text-[#E5C158] font-medium tabular-nums">(${prog.label})</span>`;
+          const barEl = document.getElementById('nowProgressBar');
+          const countEl = document.getElementById('nowCountdown');
+          if (barEl && countEl) {
+            barEl.style.width = `${prog.pct}%`;
+            countEl.textContent = prog.label;
+          }
+          if (focusModeOpen) updateFocusRing(activeBlock, now);
+        } else {
+          statusEl.textContent = 'Open buffer time — click any Free Slot on the map to fill it.';
+        }
+
+        document.getElementById('nextAlarmVal').textContent = nextAlarmText;
+
+        const currentActiveId = activeBlock ? activeBlock.id : null;
+        if (currentActiveId !== lastActiveBlockId) {
+          lastActiveBlockId = currentActiveId;
+          renderRoutine();
+          if (focusModeOpen) renderFocusModeContent();
+        }
+      }
+
+      function buildHourAxisAndGrid() {
+        const ruler = document.getElementById('hourRuler');
+        const lines = document.getElementById('hourGridlines');
+        let rHtml = '';
+        let lHtml = '';
+        for (let h = 0; h < 24; h++) {
+          const topPx = h * PX_PER_HOUR;
+          const label = h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
+          rHtml += `<div style="top:${topPx}px" class="absolute right-2 -translate-y-1/2 text-[10px] font-medium tabular-nums text-[#86868B]">${label}</div>`;
+          lHtml += `<div style="top:${topPx}px" class="absolute left-0 right-0 border-t border-white/[0.06]"></div>`;
+        }
+        ruler.innerHTML = rHtml;
+        lines.innerHTML = lHtml;
+      }
+
+      function scrollToCurrentTime() {
+        const vp = document.getElementById('timelineScrollViewport');
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const targetTop = Math.max(0, nowMin * PX_PER_MIN - vp.clientHeight * 0.35);
+        vp.scrollTo({ top: targetTop, behavior: 'smooth' });
+      }
+
+      function renderHeaderControls() {
+        const soundBtn = document.getElementById('soundToggleBtn');
+        const soundLabel = document.getElementById('soundToggleLabel');
+        if (state.soundEnabled) {
+          soundBtn.className = 'spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30';
+          soundLabel.textContent = 'Sound: ON';
+        } else {
+          soundBtn.className = 'spring-btn inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium bg-white/10 text-[#86868B] border border-white/10';
+          soundLabel.textContent = 'Sound: OFF';
+        }
+
+        const notifLabel = document.getElementById('notifToggleLabel');
+        try {
+          notifLabel.textContent = ('Notification' in window && Notification.permission === 'granted') ? 'Alerts: Active' : 'Enable Alerts';
+        } catch (_) {
+          notifLabel.textContent = 'In-App Alerts';
+        }
+      }
+
+      function renderGamification() {
+        const info = getLevelInfo(state.xp);
+        document.getElementById('levelLabel').textContent = `Lvl ${info.lvl} · ${info.title}`;
+        document.getElementById('totalXpLabel').textContent = `${state.xp} XP`;
+        document.getElementById('xpBarFill').style.width = `${info.pct}%`;
+        document.getElementById('xpNextLabel').textContent = `${info.inLevelXp} / ${info.neededXp} XP to Lvl ${info.lvl + 1}`;
+        document.getElementById('streakCountText').textContent = `${calculateStreak()}d streak`;
+      }
+
+      // Build 24h segments (splitting overnight blocks cleanly at 24:00 & 00:00)
+      function buildVisualSegments(blocks) {
+        const segs = [];
+        blocks.forEach((b) => {
+          const s = toMinutes(b.start);
+          const e = toMinutes(b.end);
+          if (e > s) {
+            segs.push({ block: b, segStart: s, segEnd: e, splitTag: '' });
+          } else {
+            segs.push({ block: b, segStart: s, segEnd: 1440, splitTag: 'Continues →' });
+            if (e > 0) {
+              segs.push({ block: b, segStart: 0, segEnd: e, splitTag: '← Continued' });
+            }
+          }
+        });
+        return segs.sort((a, b) => a.segStart - b.segStart);
+      }
+
+      function computeFreeSlots(segs) {
+        const covered = [];
+        segs.forEach((s) => covered.push([s.segStart, s.segEnd]));
+        covered.sort((a, b) => a[0] - b[0]);
+        const merged = [];
+        covered.forEach(([s, e]) => {
+          if (!merged.length || s > merged[merged.length - 1][1]) merged.push([s, e]);
+          else merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], e);
+        });
+        const gaps = [];
+        let cursor = 0;
+        merged.forEach(([s, e]) => {
+          if (s - cursor >= 15) gaps.push({ startMin: cursor, endMin: s });
+          cursor = Math.max(cursor, e);
+        });
+        if (1440 - cursor >= 15) gaps.push({ startMin: cursor, endMin: 1440 });
+        return gaps;
+      }
+
+      function renderRoutine() {
+        const blocks = getCurrentBlocks();
+        const overlaps = detectOverlaps(blocks);
+        const doneCount = blocks.filter((b) => b.done).length;
+        const alarmCount = blocks.filter((b) => b.alarm).length + state.tasks.filter((t) => !t.done && t.time).length;
+
+        document.getElementById('routineProgressVal').textContent = `${doneCount} / ${blocks.length}`;
+        document.getElementById('activeAlarmsVal').textContent = String(alarmCount);
+
+        const linkSel = document.getElementById('taskBlockLinkInput');
+        const prevLinkVal = linkSel.value;
+        linkSel.innerHTML = `<option value="">Link to routine block (optional)</option>` +
+          blocks.map((b) => `<option value="${b.id}">${formatTime12(b.start)} · ${escapeHtml(b.title.slice(0, 32))}</option>`).join('');
+        linkSel.value = prevLinkVal;
+
+        document.querySelectorAll('.mode-btn').forEach((btn) => {
+          const active = btn.dataset.mode === state.mode;
+          btn.className = `mode-btn spring-btn px-2.5 py-1 rounded-lg text-xs font-medium ${
+            active ? 'apple-pro-btn text-white font-semibold shadow' : 'text-[#86868B] hover:text-[#F5F5F7]'
+          }`;
+        });
+
+        document.querySelectorAll('.cat-pill').forEach((btn) => {
+          const active = btn.dataset.cat === state.catFilter;
+          btn.className = `cat-pill spring-btn px-3 py-1 rounded-full text-xs font-medium border ${
+            active ? 'bg-[#0A84FF]/20 text-[#0A84FF] border-[#0A84FF]/45' : 'bg-black/40 text-[#86868B] border-white/10 hover:text-[#F5F5F7]'
+          }`;
+        });
+
+        const catTotals = { classes: 0, finance: 0, building: 0, wellness: 0, rest: 0 };
+        let totalMins = 0;
+        blocks.forEach((b) => {
+          const d = durationMinutes(b.start, b.end);
+          catTotals[b.category] = (catTotals[b.category] || 0) + d;
+          totalMins += d;
+        });
+        document.getElementById('totalPlannedHours').textContent = `${(totalMins / 60).toFixed(1)}h mapped`;
+        document.getElementById('distributionBar').innerHTML = Object.entries(catTotals)
+          .filter(([, m]) => m > 0)
+          .map(([cat, m]) => {
+            const pct = totalMins ? (m / totalMins) * 100 : 0;
+            return `<div title="${CATEGORY_META[cat].label}: ${(m / 60).toFixed(1)}h" style="width:${pct.toFixed(1)}%;background:${CATEGORY_META[cat].color}" class="h-full transition-all"></div>`;
+          })
+          .join('');
+
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const filteredBlocks = state.catFilter === 'all' ? blocks : blocks.filter((b) => b.category === state.catFilter);
+        const allSegs = buildVisualSegments(blocks);
+        const visSegs = state.catFilter === 'all' ? allSegs : buildVisualSegments(filteredBlocks);
+
+        // Free Slots Layer
+        const freeSlots = state.catFilter === 'all' ? computeFreeSlots(allSegs) : [];
+        document.getElementById('freeSlotsLayer').innerHTML = freeSlots.map((g) => {
+          const topPx = g.startMin * PX_PER_MIN;
+          const heightPx = Math.max(16, (g.endMin - g.startMin) * PX_PER_MIN);
+          const dur = g.endMin - g.startMin;
+          const durStr = dur >= 60 ? `${Math.floor(dur / 60)}h${dur % 60 ? ` ${dur % 60}m` : ''}` : `${dur}m`;
+          return `
+            <button data-free-start="${minutesToHhmm(g.startMin)}" data-free-end="${minutesToHhmm(g.endMin)}"
+              style="top:${topPx}px;height:${heightPx}px"
+              class="absolute left-2 right-2 rounded-lg border border-dashed border-white/[0.08] hover:border-[#E5C158]/50 hover:bg-[#E5C158]/10 flex items-center justify-center text-[11px] font-medium text-[#86868B] hover:text-[#E5C158] transition cursor-pointer">
+              + Free Slot (${durStr})
+            </button>
+          `;
+        }).join('');
+
+        // Blocks Layer
+        document.getElementById('blocksLayer').innerHTML = visSegs.map((seg) => {
+          const b = seg.block;
+          const meta = CATEGORY_META[b.category] || CATEGORY_META.building;
+          const isNow = isBlockActive(b, nowMin);
+          if (isNow) lastActiveBlockId = b.id;
+
+          const topPx = seg.segStart * PX_PER_MIN;
+          const heightPx = Math.max(30, (seg.segEnd - seg.segStart) * PX_PER_MIN - 2);
+          const compact = heightPx < 54;
+          const dur = durationMinutes(b.start, b.end);
+          const durLabel = dur >= 60 ? `${Math.floor(dur / 60)}h${dur % 60 ? ` ${dur % 60}m` : ''}` : `${dur}m`;
+          const overlapList = overlaps[b.id] || [];
+          const linkedTasks = state.tasks.filter((t) => t.blockId === b.id);
+          const prog = isNow ? getBlockProgress(b, now) : null;
+          const staggerLeft = overlapList.length ? 'left-4 right-2' : 'left-2 right-2';
+
+          return `
+            <div data-block-card="${b.id}" style="top:${topPx}px;height:${heightPx}px" class="pointer-events-auto apple-card absolute ${staggerLeft} rounded-xl px-3 py-2 flex flex-col justify-between overflow-hidden ${
+              isNow ? 'apple-now-card' : b.done ? 'opacity-60' : ''
+            }">
+              <div class="flex items-start justify-between gap-2 min-w-0">
+                <div class="flex items-start gap-2 min-w-0">
+                  <button data-action="toggle-block-done" data-id="${b.id}" class="spring-btn mt-0.5 h-4 w-4 shrink-0 rounded border flex items-center justify-center ${
+                    b.done ? 'bg-[#30D158] border-[#30D158] text-black' : 'border-white/25 hover:border-[#E5C158] text-transparent'
+                  }" aria-label="Mark block complete">
+                    <i data-lucide="check" class="h-3 w-3"></i>
+                  </button>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <span data-move-id="${b.id}" title="Drag vertically to move block" class="cursor-ns-resize text-[11px] font-semibold tabular-nums text-[#F5F5F7] hover:text-[#E5C158]">
+                        ${formatTime12(b.start)}–${formatTime12(b.end)}
+                      </span>
+                      <span class="text-[10px] text-[#86868B] tabular-nums">(${durLabel})</span>
+                      <span class="rounded-full border px-1.5 py-0 text-[9px] font-medium ${meta.badge}">${meta.label}</span>
+                      ${seg.splitTag ? `<span class="text-[10px] font-medium text-[#86868B]">${seg.splitTag}</span>` : ''}
+                      ${isNow ? '<span class="rounded-full bg-[#0A84FF] px-1.5 py-0 text-[9px] font-bold uppercase text-white">Now</span>' : ''}
+                      ${overlapList.length ? `<span title="Overlaps with: ${escapeHtml(overlapList.join(', '))}" class="inline-flex items-center gap-0.5 rounded-full bg-[#E5C158]/20 border border-[#E5C158]/40 px-1.5 py-0 text-[9px] font-semibold text-[#E5C158]">Overlap</span>` : ''}
+                    </div>
+                    <h3 class="text-xs sm:text-sm font-semibold text-[#F5F5F7] truncate ${b.done ? 'line-through text-[#86868B]' : ''}">${escapeHtml(b.title)}</h3>
+                    ${!compact && b.notes ? `<p class="text-[11px] text-[#86868B] truncate">${escapeHtml(b.notes)}</p>` : ''}
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  ${isNow ? `
+                    <button data-action="open-focus" class="spring-btn inline-flex items-center gap-1 rounded-lg bg-[#E5C158] hover:brightness-110 px-2 py-1 text-[10px] font-semibold text-white">
+                      <i data-lucide="target" class="h-3 w-3"></i>
+                      Focus
+                    </button>
+                  ` : ''}
+                  <button data-action="toggle-block-alarm" data-id="${b.id}" class="spring-btn p-1 rounded-lg border ${
+                    b.alarm ? 'bg-[#FF9F0A]/15 border-[#FF9F0A]/30 text-[#FF9F0A]' : 'bg-white/5 border-white/5 text-[#86868B]'
+                  }">
+                    <i data-lucide="${b.alarm ? 'bell-ring' : 'bell-off'}" class="h-3 w-3"></i>
+                  </button>
+                  <button data-action="edit-block" data-id="${b.id}" class="spring-btn p-1 rounded-lg bg-white/5 border border-white/5 text-[#86868B] hover:text-[#F5F5F7]">
+                    <i data-lucide="pencil" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </div>
+
+              ${!compact && linkedTasks.length ? `
+                <div class="flex flex-wrap gap-1 pl-6 mt-1">
+                  ${linkedTasks.slice(0, 3).map((lt) => `
+                    <span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] border ${
+                      lt.done ? 'bg-[#30D158]/10 border-[#30D158]/25 text-[#30D158] line-through' : 'bg-white/5 border-white/10 text-[#F5F5F7]'
+                    }">
+                      <i data-lucide="link-2" class="h-2.5 w-2.5 text-[#E5C158]"></i>
+                      ${escapeHtml(lt.title.slice(0, 22))}${lt.title.length > 22 ? '…' : ''}
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              ${!compact && isNow ? `
+                <div class="pl-6 mt-auto">
+                  <div class="flex items-center justify-between text-[10px] text-[#F5F5F7]/80 mb-0.5">
+                    <span>Active window</span>
+                    <span id="nowCountdown" class="font-semibold tabular-nums text-[#0A84FF]">${prog.label}</span>
+                  </div>
+                  <div class="h-1 w-full rounded-full bg-white/10 overflow-hidden">
+                    <div id="nowProgressBar" class="h-full rounded-full bg-[#0A84FF]" style="width:${prog.pct}%; transition: width 0.5s var(--spring);"></div>
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Bottom 15-min Resize Handle -->
+              <div data-resize-id="${b.id}" title="Drag up/down to resize end time (15m steps)" class="absolute bottom-0 left-4 right-4 h-2 cursor-ns-resize flex items-center justify-center group">
+                <span class="w-8 h-0.5 rounded-full bg-white/15 group-hover:bg-[#E5C158] transition"></span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        lucide.createIcons();
+      }
+
+      function renderTasks() {
+        const dayOpen = state.tasks.filter((t) => t.scope === 'day' && !t.done).length;
+        const weekOpen = state.tasks.filter((t) => t.scope === 'week' && !t.done).length;
+        const monthOpen = state.tasks.filter((t) => t.scope === 'month' && !t.done).length;
+
+        document.getElementById('countDay').textContent = String(dayOpen);
+        document.getElementById('countWeek').textContent = String(weekOpen);
+        document.getElementById('countMonth').textContent = String(monthOpen);
+        document.getElementById('openTasksVal').textContent = String(dayOpen + weekOpen + monthOpen);
+
+        document.querySelectorAll('.scope-tab').forEach((btn) => {
+          const active = btn.dataset.scope === state.taskScope;
+          btn.className = `scope-tab spring-btn flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs sm:text-sm font-medium ${
+            active ? 'apple-pro-btn text-white font-semibold shadow' : 'text-[#86868B] hover:text-[#F5F5F7]'
+          }`;
+        });
+
+        document.querySelectorAll('.tfilter-btn').forEach((btn) => {
+          const active = btn.dataset.tfilter === state.taskFilter;
+          btn.className = `tfilter-btn spring-btn px-2 py-1 rounded-lg text-[11px] font-medium ${
+            active ? 'bg-white/15 text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+          }`;
+        });
+
+        document.getElementById('taskScopeInput').value = state.taskScope;
+
+        const blocks = getCurrentBlocks();
+        const blockMap = Object.fromEntries(blocks.map((b) => [b.id, b]));
+
+        const filtered = state.tasks.filter((t) => {
+          if (t.scope !== state.taskScope) return false;
+          if (state.taskFilter === 'active') return !t.done;
+          if (state.taskFilter === 'done') return t.done;
+          return true;
+        });
+
+        const listEl = document.getElementById('taskList');
+        if (!filtered.length) {
+          listEl.innerHTML = `<div class="rounded-xl border border-dashed border-white/15 p-6 text-center text-xs text-[#86868B]">No ${state.taskFilter === 'all' ? '' : state.taskFilter + ' '}tasks for this ${state.taskScope}. Add one above!</div>`;
+        } else {
+          listEl.innerHTML = filtered
+            .map((t) => {
+              if (editingTaskId === t.id) {
+                return `
+                  <div class="rounded-xl border border-[#E5C158]/50 bg-black/70 p-3 space-y-2">
+                    <input data-edit-title="${t.id}" type="text" value="${escapeHtml(t.title)}" class="w-full rounded-lg bg-black/80 border border-white/15 px-2.5 py-1.5 text-sm text-[#F5F5F7] focus:outline-none focus:border-[#E5C158]" />
+                    <div class="flex flex-wrap items-center gap-2">
+                      <select data-edit-prio="${t.id}" class="rounded-lg bg-black/80 border border-white/15 px-2 py-1 text-xs text-[#F5F5F7]">
+                        <option value="normal" ${t.priority === 'normal' ? 'selected' : ''}>Normal</option>
+                        <option value="high" ${t.priority === 'high' ? 'selected' : ''}>High</option>
+                      </select>
+                      <input data-edit-time="${t.id}" type="time" value="${t.time || ''}" class="rounded-lg bg-black/80 border border-white/15 px-2 py-1 text-xs text-[#F5F5F7]" />
+                      <select data-edit-block="${t.id}" class="flex-1 rounded-lg bg-black/80 border border-white/15 px-2 py-1 text-xs text-[#F5F5F7]">
+                        <option value="">No linked block</option>
+                        ${blocks.map((b) => `<option value="${b.id}" ${t.blockId === b.id ? 'selected' : ''}>${escapeHtml(b.title.slice(0, 24))}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                      <button data-action="cancel-edit-task" class="spring-btn px-2.5 py-1 rounded-lg text-xs text-[#F5F5F7] bg-white/10 hover:bg-white/15">Cancel</button>
+                      <button data-action="save-edit-task" data-id="${t.id}" class="spring-btn px-3 py-1 rounded-lg text-xs font-semibold text-white bg-[#E5C158] hover:brightness-110">Save</button>
+                    </div>
+                  </div>
+                `;
+              }
+
+              const linked = t.blockId && blockMap[t.blockId] ? blockMap[t.blockId] : null;
+              const prioBadge = t.priority === 'high'
+                ? '<span class="rounded-full bg-[#FF453A]/15 border border-[#FF453A]/30 px-2 py-0.5 text-[10px] font-medium text-[#FF453A]">High · +30 XP</span>'
+                : '<span class="rounded-full bg-white/5 border border-white/10 px-2 py-0.5 text-[10px] font-medium text-[#86868B]">+15 XP</span>';
+              const timeBadge = t.time
+                ? `<span class="inline-flex items-center gap-1 rounded-full bg-[#E5C158]/15 border border-[#E5C158]/30 px-2 py-0.5 text-[10px] font-medium text-[#E5C158] tabular-nums"><i data-lucide="alarm-clock" class="h-2.5 w-2.5"></i>${formatTime12(t.time)}</span>`
+                : '';
+              const blockBadge = linked
+                ? `<span class="inline-flex items-center gap-1 rounded-full bg-[#E5C158]/15 border border-[#E5C158]/30 px-2 py-0.5 text-[10px] font-medium text-[#E5C158]"><i data-lucide="link-2" class="h-2.5 w-2.5"></i>${escapeHtml(linked.title.slice(0, 18))}</span>`
+                : '';
+
+              return `
+                <div draggable="true" data-task-id="${t.id}" class="apple-card flex items-start justify-between gap-2.5 rounded-xl p-3 cursor-grab active:cursor-grabbing ${
+                  t.done ? 'opacity-60' : ''
+                }">
+                  <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                    <button data-action="toggle-task" data-id="${t.id}" class="spring-btn mt-0.5 h-5 w-5 shrink-0 rounded-md border flex items-center justify-center ${
+                      t.done ? 'bg-[#30D158] border-[#30D158] text-black' : 'border-white/25 hover:border-[#E5C158] text-transparent'
+                    }" aria-label="Toggle task">
+                      <i data-lucide="check" class="h-3.5 w-3.5"></i>
+                    </button>
+                    <div data-action="start-edit-task" data-id="${t.id}" title="Click to edit inline or drag onto a routine block" class="min-w-0 flex-1 cursor-pointer">
+                      <p class="text-sm font-medium text-[#F5F5F7] ${t.done ? 'line-through text-[#86868B]' : ''}">${escapeHtml(t.title)}</p>
+                      <div class="flex flex-wrap gap-1.5 mt-1.5">${prioBadge}${timeBadge}${blockBadge}</div>
+                    </div>
+                  </div>
+                  <button data-action="delete-task" data-id="${t.id}" class="spring-btn p-1 rounded-lg text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 shrink-0" aria-label="Delete task">
+                    <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                  </button>
+                </div>
+              `;
+            })
+            .join('');
+        }
+
+        const completedBlocks = blocks.filter((b) => b.done);
+        const completedTasks = state.tasks.filter((t) => t.done && t.scope === 'day');
+        const totalFinished = completedBlocks.length + completedTasks.length;
+        document.getElementById('completedTodayCount').textContent = String(totalFinished);
+
+        const bodyEl = document.getElementById('completedTodayBody');
+        const chevron = document.getElementById('completedLogChevron');
+        if (state.completedLogOpen) {
+          bodyEl.classList.remove('hidden');
+          chevron.classList.add('rotate-180');
+        } else {
+          bodyEl.classList.add('hidden');
+          chevron.classList.remove('rotate-180');
+        }
+
+        if (!totalFinished) {
+          bodyEl.innerHTML = `<p class="text-xs text-[#86868B] py-1">Complete a routine block or Day task to log it here.</p>`;
+        } else {
+          bodyEl.innerHTML = [
+            ...completedBlocks.map((b) => `<div class="flex items-center justify-between text-xs text-[#F5F5F7]"><span>✓ ${escapeHtml(b.title)}</span><span class="text-[#30D158] font-medium tabular-nums">+25 XP</span></div>`),
+            ...completedTasks.map((t) => `<div class="flex items-center justify-between text-xs text-[#F5F5F7]"><span>✓ ${escapeHtml(t.title)}</span><span class="text-[#30D158] font-medium tabular-nums">+${t.priority === 'high' ? 30 : 15} XP</span></div>`)
+          ].join('');
+        }
+
+        lucide.createIcons();
+      }
+
+      function getHeatColor(entry) {
+        if (!entry || entry.totalCount === 0 || entry.pct === 0) return '#1C1C1E';
+        if (entry.pct >= 80) return '#30D158';
+        if (entry.pct >= 40) return '#E5C158';
+        return '#FF453A';
+      }
+
+      function renderHeatmap() {
+        const daysCount = state.heatRange || 90;
+        const today = getDateStr();
+        const hasDemo = Object.values(state.history || {}).some((h) => h.isDemo);
+
+        document.getElementById('demoHistoryBadge').classList.toggle('hidden', !hasDemo);
+        document.getElementById('clearDemoBtn').classList.toggle('hidden', !hasDemo);
+
+        document.querySelectorAll('.heat-range-btn').forEach((btn) => {
+          const active = Number(btn.dataset.range) === daysCount;
+          btn.className = `heat-range-btn spring-btn px-2.5 py-1 rounded-lg text-xs font-medium ${
+            active ? 'apple-pro-btn text-white font-semibold shadow' : 'text-[#86868B] hover:text-[#F5F5F7]'
+          }`;
+        });
+
+        const startStr = addDaysStr(today, -(daysCount - 1));
+        const cells = [];
+        for (let i = 0; i < daysCount; i++) cells.push(addDaysStr(startStr, i));
+
+        const [sy, sm, sd] = startStr.split('-').map(Number);
+        const startDow = new Date(sy, sm - 1, sd).getDay();
+        const padded = Array(startDow).fill(null).concat(cells);
+        const weeks = [];
+        for (let i = 0; i < padded.length; i += 7) weeks.push(padded.slice(i, i + 7));
+
+        let lastMonth = -1;
+        document.getElementById('heatmapMonthRow').innerHTML = weeks.map((week) => {
+          const firstValid = week.find(Boolean);
+          if (!firstValid) return `<span class="w-[12px] shrink-0"></span>`;
+          const m = parseInt(firstValid.split('-')[1], 10) - 1;
+          if (m !== lastMonth) {
+            lastMonth = m;
+            return `<span class="w-[12px] shrink-0 overflow-visible whitespace-nowrap">${MONTH_NAMES[m]}</span>`;
+          }
+          return `<span class="w-[12px] shrink-0"></span>`;
+        }).join('');
+
+        document.getElementById('heatmapGrid').innerHTML = weeks
+          .map((week) => `
+            <div class="flex flex-col gap-1">
+              ${week.map((dStr) => {
+                if (!dStr) return `<div class="heatmap-cell opacity-0 pointer-events-none"></div>`;
+                const entry = state.history[dStr];
+                const color = getHeatColor(entry);
+                const tip = entry
+                  ? `${dStr}: ${entry.pct}% (${entry.doneCount}/${entry.totalCount}) · +${entry.xpEarned} XP`
+                  : `${dStr}: No data`;
+                return `<button type="button" data-heat-date="${dStr}" title="${tip}" style="background:${color}" class="heatmap-cell cursor-pointer border border-white/5"></button>`;
+              }).join('')}
+            </div>
+          `)
+          .join('');
+
+        const loggedDays = cells.filter((d) => state.history[d] && state.history[d].pct > 0);
+        const crushedDays = loggedDays.filter((d) => state.history[d].pct >= 80).length;
+        document.getElementById('heatmapSummaryText').textContent = `${loggedDays.length} active days · ${crushedDays} days >= 80%`;
+      }
+
+      function openDayInspector(dateStr) {
+        const entry = state.history[dateStr];
+        const modal = document.getElementById('dayInspectorModal');
+        document.getElementById('inspectorDateTitle').textContent = `Execution Log · ${dateStr}`;
+        document.getElementById('inspectorDemoTag').classList.toggle('hidden', !(entry && entry.isDemo));
+
+        if (!entry) {
+          document.getElementById('inspectorSubtitle').textContent = 'No routine or task activity recorded on this day.';
+          document.getElementById('inspectorPctVal').textContent = '0%';
+          document.getElementById('inspectorXpVal').textContent = '+0 XP';
+          document.getElementById('inspectorRatioVal').textContent = '0 / 0';
+          document.getElementById('inspectorChecklist').innerHTML = `<p class="text-sm text-[#86868B] py-4 text-center">No items logged for ${dateStr}.</p>`;
+        } else {
+          const statusLabel = entry.pct >= 80 ? 'Crushed it' : entry.pct >= 40 ? 'Partial / Off-pace' : 'Needs focus';
+          document.getElementById('inspectorSubtitle').textContent = `Status: ${statusLabel}`;
+          document.getElementById('inspectorPctVal').textContent = `${entry.pct}%`;
+          document.getElementById('inspectorXpVal').textContent = `+${entry.xpEarned} XP`;
+          document.getElementById('inspectorRatioVal').textContent = `${entry.doneCount} / ${entry.totalCount}`;
+          document.getElementById('inspectorChecklist').innerHTML = (entry.items || [])
+            .map((item) => `
+              <div class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${
+                item.done ? 'bg-[#30D158]/10 border-[#30D158]/25 text-[#F5F5F7]' : 'bg-black/45 border-white/5 text-[#86868B]'
+              }">
+                <span class="flex items-center gap-2 min-w-0">
+                  <span class="${item.done ? 'text-[#30D158]' : 'text-[#FF453A]'} font-bold">${item.done ? '✓' : '✕'}</span>
+                  <span class="truncate">${escapeHtml(item.title)}</span>
+                  <span class="rounded bg-white/5 px-1.5 py-0.5 text-[10px] uppercase text-[#86868B]">${item.kind}</span>
+                </span>
+                <span class="shrink-0 font-semibold tabular-nums ${item.done ? 'text-[#E5C158]' : 'text-[#86868B]/60'}">${item.done ? `+${item.xp} XP` : 'Missed'}</span>
+              </div>
+            `)
+            .join('');
+        }
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+
+      function updateGcalLink() {
+        const title = document.getElementById('blockTitleInput').value.trim() || 'Routine Block';
+        const start = document.getElementById('blockStartInput').value || '09:00';
+        const end = document.getElementById('blockEndInput').value || '10:00';
+        const notes = document.getElementById('blockNotesInput').value.trim();
+        const today = getDateStr();
+        const tomorrow = addDaysStr(today, 1);
+        const startFmt = today.replace(/-/g, '') + 'T' + start.replace(':', '') + '00';
+        const endDate = toMinutes(end) <= toMinutes(start) ? tomorrow : today;
+        const endFmt = endDate.replace(/-/g, '') + 'T' + end.replace(':', '') + '00';
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startFmt}/${endFmt}&recur=RRULE:FREQ=DAILY&details=${encodeURIComponent(notes)}`;
+        document.getElementById('gcalSingleLink').href = url;
+      }
+
+      function openBlockModal(block = null, presetStart = '', presetEnd = '') {
+        const modal = document.getElementById('blockModal');
+        const heading = document.getElementById('blockModalHeading');
+        const delBtn = document.getElementById('deleteBlockBtn');
+
+        if (block) {
+          heading.textContent = 'Edit Routine Block';
+          document.getElementById('blockIdInput').value = block.id;
+          document.getElementById('blockTitleInput').value = block.title;
+          document.getElementById('blockStartInput').value = block.start;
+          document.getElementById('blockEndInput').value = block.end;
+          document.getElementById('blockCategoryInput').value = block.category;
+          document.getElementById('blockOffsetInput').value = String(block.offset || 0);
+          document.getElementById('blockNotesInput').value = block.notes || '';
+          document.getElementById('blockAlarmInput').checked = Boolean(block.alarm);
+          delBtn.classList.remove('hidden');
+        } else {
+          heading.textContent = 'Add Routine Block';
+          document.getElementById('blockIdInput').value = '';
+          document.getElementById('blockTitleInput').value = '';
+          document.getElementById('blockStartInput').value = presetStart || '15:30';
+          document.getElementById('blockEndInput').value = presetEnd || '16:30';
+          document.getElementById('blockCategoryInput').value = 'building';
+          document.getElementById('blockOffsetInput').value = '5';
+          document.getElementById('blockNotesInput').value = '';
+          document.getElementById('blockAlarmInput').checked = true;
+          delBtn.classList.add('hidden');
+        }
+        updateGcalLink();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+
+      function closeBlockModal() {
+        document.getElementById('blockModal').classList.add('hidden');
+        document.getElementById('blockModal').classList.remove('flex');
+      }
+
+      function exportIcsFile() {
+        const blocks = getCurrentBlocks().filter((b) => b.alarm);
+        if (!blocks.length) {
+          showToast('Enable at least one block alarm before exporting.', 'warn');
+          return;
+        }
+        const todayStr = getDateStr();
+        const tomorrowStr = addDaysStr(todayStr, 1);
+        const startDateFmt = todayStr.replace(/-/g, '');
+        const nextDateFmt = tomorrowStr.replace(/-/g, '');
+
+        const lines = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'PRODID:-//Daily Routine Map//EN',
+          'CALSCALE:GREGORIAN'
+        ];
+
+        blocks.forEach((b) => {
+          const crossesMidnight = toMinutes(b.end) <= toMinutes(b.start);
+          const endDateFmt = crossesMidnight ? nextDateFmt : startDateFmt;
+          const startClean = b.start.replace(':', '') + '00';
+          const endClean = b.end.replace(':', '') + '00';
+          const triggerMin = b.offset ? `-PT${b.offset}M` : 'PT0M';
+          lines.push(
+            'BEGIN:VEVENT',
+            `UID:routine-${state.mode}-${b.id}@dailyroutinemap`,
+            `DTSTAMP:${startDateFmt}T000000`,
+            `DTSTART:${startDateFmt}T${startClean}`,
+            `DTEND:${endDateFmt}T${endClean}`,
+            'RRULE:FREQ=DAILY',
+            `SUMMARY:${b.title.replace(/,/g, '\\,')}`,
+            `DESCRIPTION:${(b.notes || 'Daily Routine Block').replace(/,/g, '\\,')}`,
+            'BEGIN:VALARM',
+            'ACTION:DISPLAY',
+            `DESCRIPTION:${b.title.replace(/,/g, '\\,')}`,
+            `TRIGGER:${triggerMin}`,
+            'END:VALARM',
+            'END:VEVENT'
+          );
+        });
+
+        lines.push('END:VCALENDAR');
+        const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `daily-routine-${state.mode}.ics`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast(`Exported ${blocks.length} alarms (.ics) with overnight fix!`, 'success');
+      }
+
+      function renderAll() {
+        renderHeaderControls();
+        renderRoutine();
+        renderTasks();
+        renderGamification();
+        renderHeatmap();
+        tickClockAndAlarms();
+      }
+
+      // --- Event Listeners ---
+      ['blockTitleInput', 'blockStartInput', 'blockEndInput', 'blockNotesInput'].forEach((id) => {
+        document.getElementById(id).addEventListener('input', updateGcalLink);
+      });
+
+      document.getElementById('soundToggleBtn').addEventListener('click', () => {
+        state.soundEnabled = !state.soundEnabled;
+        saveState();
+        renderHeaderControls();
+        if (state.soundEnabled) playChime();
+      });
+
+      document.getElementById('focusMuteBtn').addEventListener('click', () => {
+        state.soundEnabled = !state.soundEnabled;
+        saveState();
+        renderHeaderControls();
+        document.getElementById('focusMuteLabel').textContent = state.soundEnabled ? 'Sound ON' : 'Muted';
+      });
+
+      document.getElementById('exitFocusBtn').addEventListener('click', closeFocusMode);
+
+      document.getElementById('focusLinkedTasks').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-focus-task]');
+        if (!btn) return;
+        const id = btn.dataset.focusTask;
+        const t = state.tasks.find((x) => x.id === id);
+        if (!t) return;
+        t.done = !t.done;
+        const pts = t.priority === 'high' ? 30 : 15;
+        toggleItemXp(`tsk:${t.id}`, t.done, pts, t.title);
+        syncTodayHistory();
+        saveState();
+        renderFocusModeContent();
+        renderTasks();
+        renderRoutine();
+        renderGamification();
+        renderHeatmap();
+      });
+
+      document.getElementById('notifToggleBtn').addEventListener('click', async () => {
+        try {
+          if (!('Notification' in window)) {
+            showToast('Browser notifications unavailable here—in-app alarms still fire!', 'warn');
+            return;
+          }
+          const perm = await Notification.requestPermission();
+          renderHeaderControls();
+          showToast(perm === 'granted' ? 'Browser notifications enabled!' : 'Notifications blocked—in-app sound & modal remain active.', perm === 'granted' ? 'success' : 'warn');
+        } catch (_) {
+          showToast('In-app sound & modal alarms are active.', 'info');
+        }
+      });
+
+      document.getElementById('testAlarmBtn').addEventListener('click', () => {
+        triggerAlarm('Test Routine Alarm', 'Your alarm chime and reminder banner are working.');
+      });
+
+      document.getElementById('exportIcsBtn').addEventListener('click', exportIcsFile);
+      document.getElementById('jumpToNowBtn').addEventListener('click', scrollToCurrentTime);
+
+      // Sync Modal Events
+      document.getElementById('openSyncModalBtn').addEventListener('click', async () => {
+        const modal = document.getElementById('syncModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        const key = await compressStateToKey(state);
+        const base = window.location.href.split('#')[0];
+        document.getElementById('syncLinkOutput').value = `${base}#sync=${key}`;
+        document.getElementById('syncKeyOutput').value = key;
+        const cfg = loadGistCfg();
+        document.getElementById('gistTokenInput').value = cfg.token || '';
+        document.getElementById('gistIdInput').value = cfg.gistId || '';
+        document.getElementById('gistStatusText').textContent = cfg.token ? 'Connected' : 'Not configured';
+      });
+
+      document.getElementById('closeSyncModalBtn').addEventListener('click', () => {
+        document.getElementById('syncModal').classList.add('hidden');
+        document.getElementById('syncModal').classList.remove('flex');
+      });
+
+      document.querySelectorAll('.sync-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.synctab;
+          document.querySelectorAll('.sync-tab').forEach((b) => {
+            const act = b.dataset.synctab === tab;
+            b.className = `sync-tab spring-btn rounded-lg py-1.5 text-xs font-medium ${act ? 'apple-pro-btn text-white font-semibold' : 'text-[#86868B] hover:text-[#F5F5F7]'}`;
+          });
+          document.getElementById('syncTabSnapshot').classList.toggle('hidden', tab !== 'snapshot');
+          document.getElementById('syncTabGist').classList.toggle('hidden', tab !== 'gist');
+        });
+      });
+      document.querySelector('.sync-tab[data-synctab="snapshot"]').click();
+
+      function copyText(val, label) {
+        try {
+          if (navigator.clipboard) navigator.clipboard.writeText(val);
+          else {
+            const ta = document.createElement('textarea');
+            ta.value = val;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+          }
+          showToast(`${label} copied to clipboard!`, 'success');
+        } catch (_) {
+          showToast('Copy failed—select and copy manually.', 'warn');
+        }
+      }
+
+      document.getElementById('copySyncLinkBtn').addEventListener('click', () => copyText(document.getElementById('syncLinkOutput').value, 'Sync Link'));
+      document.getElementById('copySyncKeyBtn').addEventListener('click', () => copyText(document.getElementById('syncKeyOutput').value, 'Sync Key'));
+
+      document.getElementById('applyPasteSyncBtn').addEventListener('click', async () => {
+        const val = document.getElementById('pasteSyncInput').value.trim();
+        if (!val) return;
+        try {
+          const incoming = await decompressKeyToState(val);
+          document.getElementById('syncModal').classList.add('hidden');
+          document.getElementById('syncModal').classList.remove('flex');
+          showIncomingSyncPreview(incoming);
+        } catch (_) {
+          showToast('Could not decode that Sync Link or Key.', 'warn');
+        }
+      });
+
+      document.getElementById('saveGistBtn').addEventListener('click', async () => {
+        const token = document.getElementById('gistTokenInput').value.trim();
+        const gistId = document.getElementById('gistIdInput').value.trim();
+        if (!token) {
+          showToast('Please enter a GitHub token with gist scope.', 'warn');
+          return;
+        }
+        const cfg = { token, gistId };
+        saveGistCfg(cfg);
+        await pushToGist(cfg);
+        showToast('Live Cloud Auto-Sync enabled!', 'success');
+      });
+
+      document.getElementById('disconnectGistBtn').addEventListener('click', () => {
+        saveGistCfg({ token: '', gistId: '' });
+        document.getElementById('gistTokenInput').value = '';
+        document.getElementById('gistIdInput').value = '';
+        document.getElementById('gistStatusText').textContent = 'Disconnected';
+        updateCloudPill('', false);
+        showToast('Cloud Auto-Sync disconnected.', 'info');
+      });
+
+      document.getElementById('cancelIncomingSyncBtn').addEventListener('click', () => {
+        pendingIncomingState = null;
+        document.getElementById('incomingSyncModal').classList.add('hidden');
+        document.getElementById('incomingSyncModal').classList.remove('flex');
+      });
+
+      document.getElementById('overwriteIncomingSyncBtn').addEventListener('click', () => {
+        if (!pendingIncomingState) return;
+        pendingIncomingState.awardedXpItems = pendingIncomingState.awardedXpItems || {};
+        state = pendingIncomingState;
+        pendingIncomingState = null;
+        saveState();
+        renderAll();
+        document.getElementById('incomingSyncModal').classList.add('hidden');
+        document.getElementById('incomingSyncModal').classList.remove('flex');
+        showToast('Local state overwritten from sync!', 'success');
+      });
+
+      document.getElementById('mergeIncomingSyncBtn').addEventListener('click', () => {
+        if (!pendingIncomingState) return;
+        const existingIds = new Set(state.tasks.map((t) => t.id));
+        (pendingIncomingState.tasks || []).forEach((t) => {
+          if (!existingIds.has(t.id)) state.tasks.push(t);
+        });
+        pendingIncomingState = null;
+        syncTodayHistory();
+        saveState();
+        renderAll();
+        document.getElementById('incomingSyncModal').classList.add('hidden');
+        document.getElementById('incomingSyncModal').classList.remove('flex');
+        showToast('Merged incoming tasks into local state!', 'success');
+      });
+
+      document.getElementById('exportJsonBtn').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `routine-map-backup-${getDateStr()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Backup JSON downloaded.', 'success');
+      });
+
+      document.getElementById('importJsonBtn').addEventListener('click', () => document.getElementById('importJsonInput').click());
+
+      document.getElementById('importJsonInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result));
+            if (!parsed || !parsed.routines || !parsed.tasks) throw new Error('Invalid format');
+            parsed.awardedXpItems = parsed.awardedXpItems || {};
+            state = parsed;
+            saveState();
+            renderAll();
+            showToast('Backup restored successfully!', 'success');
+          } catch (_) {
+            showToast('Invalid backup JSON file.', 'warn');
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      });
+
+      document.getElementById('dismissAlarmBtn').addEventListener('click', closeAlarmModal);
+      document.getElementById('snoozeAlarmBtn').addEventListener('click', () => {
+        const title = document.getElementById('alarmModalTitle').textContent;
+        const desc = document.getElementById('alarmModalDesc').textContent;
+        closeAlarmModal();
+        showToast('Snoozed for 5 minutes.', 'info');
+        if (activeAlarmTimer) clearTimeout(activeAlarmTimer);
+        activeAlarmTimer = setTimeout(() => triggerAlarm(title, desc), 5 * 60 * 1000);
+      });
+
+      document.querySelectorAll('.mode-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.mode = btn.dataset.mode;
+          saveState();
+          renderRoutine();
+          tickClockAndAlarms();
+        });
+      });
+
+      document.querySelectorAll('.cat-pill').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.catFilter = btn.dataset.cat;
+          saveState();
+          renderRoutine();
+        });
+      });
+
+      document.getElementById('addBlockBtn').addEventListener('click', () => openBlockModal(null));
+      document.getElementById('closeBlockModalBtn').addEventListener('click', closeBlockModal);
+      document.getElementById('cancelBlockBtn').addEventListener('click', closeBlockModal);
+      document.getElementById('closeInspectorBtn').addEventListener('click', () => {
+        document.getElementById('dayInspectorModal').classList.add('hidden');
+        document.getElementById('dayInspectorModal').classList.remove('flex');
+      });
+
+      ['blockModal', 'alarmModal', 'dayInspectorModal', 'focusModal', 'syncModal', 'incomingSyncModal', 'authModal'].forEach((id) => {
+        const m = document.getElementById(id);
+        m.addEventListener('click', (e) => {
+          if (e.target === m) {
+            if (id === 'focusModal') closeFocusMode();
+            else {
+              m.classList.add('hidden');
+              m.classList.remove('flex');
+            }
+          }
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeBlockModal();
+          closeAlarmModal();
+          closeFocusMode();
+          ['dayInspectorModal', 'syncModal', 'incomingSyncModal', 'authModal'].forEach((id) => {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+          });
+          if (editingTaskId) {
+            editingTaskId = null;
+            renderTasks();
+          }
+          return;
+        }
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.metaKey || e.ctrlKey || e.altKey) return;
+
+        if (e.key === 'n' || e.key === 'N') {
+          e.preventDefault();
+          document.getElementById('taskTitleInput').focus();
+        } else if (e.key === 'b' || e.key === 'B') {
+          e.preventDefault();
+          openBlockModal(null);
+        } else if (e.key === '1') {
+          state.taskScope = 'day';
+          saveState();
+          renderTasks();
+        } else if (e.key === '2') {
+          state.taskScope = 'week';
+          saveState();
+          renderTasks();
+        } else if (e.key === '3') {
+          state.taskScope = 'month';
+          saveState();
+          renderTasks();
+        }
+      });
+
+      document.getElementById('resetRoutineBtn').addEventListener('click', () => {
+        const today = getDateStr();
+        const modeUsed = state.mode;
+        const snapshot = JSON.parse(JSON.stringify(state.routines[modeUsed]));
+        state.awardedXpItems = state.awardedXpItems || {};
+        state.awardedXpItems[today] = state.awardedXpItems[today] || {};
+        const ledger = state.awardedXpItems[today];
+
+        let deductedXp = 0;
+        const removedLedgerEntries = {};
+        snapshot.forEach((b) => {
+          if (b.done && ledger[`blk:${b.id}`]) {
+            deductedXp += ledger[`blk:${b.id}`];
+            removedLedgerEntries[`blk:${b.id}`] = ledger[`blk:${b.id}`];
+            delete ledger[`blk:${b.id}`];
+          }
+        });
+        state.xp = Math.max(0, state.xp - deductedXp);
+        state.routines[modeUsed] = JSON.parse(JSON.stringify(modeUsed === 'weekday' ? DEFAULT_WEEKDAY : DEFAULT_WEEKEND));
+        syncTodayHistory();
+        saveState();
+        renderAll();
+
+        showToast(`Reset ${modeUsed} routine${deductedXp ? ` (-${deductedXp} XP reconciled)` : ''}.`, 'info', () => {
+          state.routines[modeUsed] = snapshot;
+          Object.assign(state.awardedXpItems[today], removedLedgerEntries);
+          state.xp += deductedXp;
+          syncTodayHistory();
+          saveState();
+          renderAll();
+        });
+      });
+
+      document.getElementById('blockForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('blockIdInput').value;
+        const payload = {
+          id: id || `b_${Date.now()}`,
+          title: document.getElementById('blockTitleInput').value.trim(),
+          start: document.getElementById('blockStartInput').value,
+          end: document.getElementById('blockEndInput').value,
+          category: document.getElementById('blockCategoryInput').value,
+          offset: parseInt(document.getElementById('blockOffsetInput').value, 10) || 0,
+          notes: document.getElementById('blockNotesInput').value.trim(),
+          alarm: document.getElementById('blockAlarmInput').checked,
+          done: false
+        };
+        const list = state.routines[state.mode];
+        if (id) {
+          const idx = list.findIndex((b) => b.id === id);
+          if (idx !== -1) {
+            payload.done = list[idx].done;
+            list[idx] = payload;
+          }
+        } else {
+          list.push(payload);
+        }
+        syncTodayHistory();
+        saveState();
+        closeBlockModal();
+        renderRoutine();
+        renderHeatmap();
+        tickClockAndAlarms();
+        showToast(id ? 'Routine block updated.' : 'Routine block added.', 'success');
+      });
+
+      document.getElementById('deleteBlockBtn').addEventListener('click', () => {
+        const id = document.getElementById('blockIdInput').value;
+        const removed = state.routines[state.mode].find((b) => b.id === id);
+        const modeUsed = state.mode;
+        state.routines[modeUsed] = state.routines[modeUsed].filter((b) => b.id !== id);
+        syncTodayHistory();
+        saveState();
+        closeBlockModal();
+        renderRoutine();
+        renderHeatmap();
+        tickClockAndAlarms();
+        showToast('Block removed.', 'info', () => {
+          if (removed) {
+            state.routines[modeUsed].push(removed);
+            syncTodayHistory();
+            saveState();
+            renderRoutine();
+            renderHeatmap();
+          }
+        });
+      });
+
+      // Free Slot Click
+      document.getElementById('freeSlotsLayer').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-free-start]');
+        if (!btn) return;
+        openBlockModal(null, btn.dataset.freeStart, btn.dataset.freeEnd);
+      });
+
+      const blocksLayerEl = document.getElementById('blocksLayer');
+      blocksLayerEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const { action, id } = btn.dataset;
+        if (action === 'open-focus') {
+          openFocusMode();
+          return;
+        }
+        const list = state.routines[state.mode];
+        const item = list.find((b) => b.id === id);
+        if (!item) return;
+
+        if (action === 'toggle-block-done') {
+          item.done = !item.done;
+          toggleItemXp(`blk:${item.id}`, item.done, 25, item.title);
+          syncTodayHistory();
+          saveState();
+          renderAll();
+        } else if (action === 'toggle-block-alarm') {
+          item.alarm = !item.alarm;
+          saveState();
+          renderRoutine();
+          tickClockAndAlarms();
+          showToast(item.alarm ? `Alarm enabled for "${item.title}"` : `Alarm muted for "${item.title}"`, 'info');
+        } else if (action === 'edit-block') {
+          openBlockModal(item);
+        }
+      });
+
+      // Drag-and-Drop Task onto Routine Block
+      const taskListEl = document.getElementById('taskList');
+      taskListEl.addEventListener('dragstart', (e) => {
+        const card = e.target.closest('[data-task-id]');
+        if (!card) return;
+        e.dataTransfer.setData('text/plain', card.dataset.taskId);
+        e.dataTransfer.effectAllowed = 'link';
+      });
+
+      blocksLayerEl.addEventListener('dragover', (e) => {
+        const card = e.target.closest('[data-block-card]');
+        if (!card) return;
+        e.preventDefault();
+        card.classList.add('drop-active');
+      });
+
+      blocksLayerEl.addEventListener('dragleave', (e) => {
+        const card = e.target.closest('[data-block-card]');
+        if (!card) return;
+        card.classList.remove('drop-active');
+      });
+
+      blocksLayerEl.addEventListener('drop', (e) => {
+        const card = e.target.closest('[data-block-card]');
+        if (!card) return;
+        e.preventDefault();
+        card.classList.remove('drop-active');
+        const taskId = e.dataTransfer.getData('text/plain');
+        const blockId = card.dataset.blockCard;
+        const task = state.tasks.find((t) => t.id === taskId);
+        const block = getCurrentBlocks().find((b) => b.id === blockId);
+        if (task && block) {
+          task.blockId = block.id;
+          saveState();
+          renderRoutine();
+          renderTasks();
+          showToast(`Linked "${task.title.slice(0, 24)}" → ${block.title}`, 'success');
+        }
+      });
+
+      // Live 15-Minute Drag-to-Resize & Drag-to-Move with Floating Tooltip
+      let dragOp = null;
+      const dragTip = document.getElementById('dragTooltip');
+
+      blocksLayerEl.addEventListener('mousedown', (e) => {
+        const resizeEl = e.target.closest('[data-resize-id]');
+        const moveEl = e.target.closest('[data-move-id]');
+        if (!resizeEl && !moveEl) return;
+        e.preventDefault();
+        const blockId = resizeEl ? resizeEl.dataset.resizeId : moveEl.dataset.moveId;
+        const block = state.routines[state.mode].find((b) => b.id === blockId);
+        if (!block) return;
+        dragOp = {
+          type: resizeEl ? 'resize' : 'move',
+          block,
+          startY: e.clientY,
+          origStartMins: toMinutes(block.start),
+          origEndMins: toMinutes(block.end),
+          durMins: durationMinutes(block.start, block.end)
+        };
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragOp) return;
+        const deltaPx = e.clientY - dragOp.startY;
+        const steps = Math.round(deltaPx / (15 * PX_PER_MIN));
+        const deltaMins = steps * 15;
+
+        if (dragOp.type === 'resize') {
+          const newEnd = minutesToHhmm(dragOp.origEndMins + deltaMins);
+          if (durationMinutes(dragOp.block.start, newEnd) >= 15) {
+            dragOp.block.end = newEnd;
+          }
+        } else {
+          const newStart = minutesToHhmm(dragOp.origStartMins + deltaMins);
+          const newEnd = minutesToHhmm(dragOp.origStartMins + deltaMins + dragOp.durMins);
+          dragOp.block.start = newStart;
+          dragOp.block.end = newEnd;
+        }
+
+        dragTip.textContent = `${formatTime12(dragOp.block.start)} – ${formatTime12(dragOp.block.end)}`;
+        dragTip.style.left = `${e.clientX + 14}px`;
+        dragTip.style.top = `${e.clientY - 12}px`;
+        dragTip.classList.remove('hidden');
+        renderRoutine();
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (!dragOp) return;
+        const b = dragOp.block;
+        dragOp = null;
+        dragTip.classList.add('hidden');
+        saveState();
+        renderRoutine();
+        tickClockAndAlarms();
+        showToast(`Updated "${b.title}" (${formatTime12(b.start)} – ${formatTime12(b.end)})`, 'info');
+      });
+
+      document.querySelectorAll('.scope-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.taskScope = btn.dataset.scope;
+          saveState();
+          renderTasks();
+        });
+      });
+
+      document.querySelectorAll('.tfilter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.taskFilter = btn.dataset.tfilter;
+          saveState();
+          renderTasks();
+        });
+      });
+
+      document.getElementById('taskForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = document.getElementById('taskTitleInput').value.trim();
+        if (!title) return;
+        const scope = document.getElementById('taskScopeInput').value;
+        const priority = document.getElementById('taskPriorityInput').value;
+        const time = document.getElementById('taskTimeInput').value;
+        const blockId = document.getElementById('taskBlockLinkInput').value;
+
+        state.tasks.unshift({ id: `t_${Date.now()}`, title, scope, priority, time, blockId, done: false });
+        state.taskScope = scope;
+        document.getElementById('taskTitleInput').value = '';
+        document.getElementById('taskTimeInput').value = '';
+        document.getElementById('taskBlockLinkInput').value = '';
+        syncTodayHistory();
+        saveState();
+        renderAll();
+        showToast(`Added to ${scope} tasks.`, 'success');
+      });
+
+      taskListEl.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        const { action, id } = el.dataset;
+
+        if (action === 'toggle-task') {
+          const t = state.tasks.find((x) => x.id === id);
+          if (t) {
+            t.done = !t.done;
+            const pts = t.priority === 'high' ? 30 : 15;
+            toggleItemXp(`tsk:${t.id}`, t.done, pts, t.title);
+            syncTodayHistory();
+            saveState();
+            renderAll();
+          }
+        } else if (action === 'start-edit-task') {
+          editingTaskId = id;
+          renderTasks();
+        } else if (action === 'cancel-edit-task') {
+          editingTaskId = null;
+          renderTasks();
+        } else if (action === 'save-edit-task') {
+          const t = state.tasks.find((x) => x.id === id);
+          if (t) {
+            const titleIn = document.querySelector(`[data-edit-title="${id}"]`);
+            const prioIn = document.querySelector(`[data-edit-prio="${id}"]`);
+            const timeIn = document.querySelector(`[data-edit-time="${id}"]`);
+            const blockIn = document.querySelector(`[data-edit-block="${id}"]`);
+            if (titleIn && titleIn.value.trim()) t.title = titleIn.value.trim();
+            if (prioIn) t.priority = prioIn.value;
+            if (timeIn) t.time = timeIn.value;
+            if (blockIn) t.blockId = blockIn.value;
+          }
+          editingTaskId = null;
+          syncTodayHistory();
+          saveState();
+          renderTasks();
+          renderRoutine();
+          tickClockAndAlarms();
+          showToast('Task updated.', 'success');
+        } else if (action === 'delete-task') {
+          const idx = state.tasks.findIndex((x) => x.id === id);
+          const removed = state.tasks[idx];
+          state.tasks = state.tasks.filter((x) => x.id !== id);
+          syncTodayHistory();
+          saveState();
+          renderAll();
+          showToast('Task deleted.', 'info', () => {
+            if (removed) {
+              state.tasks.splice(Math.max(0, idx), 0, removed);
+              syncTodayHistory();
+              saveState();
+              renderAll();
+            }
+          });
+        }
+      });
+
+      document.getElementById('toggleCompletedLogBtn').addEventListener('click', () => {
+        state.completedLogOpen = !state.completedLogOpen;
+        saveState();
+        renderTasks();
+      });
+
+      document.querySelectorAll('.heat-range-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.heatRange = Number(btn.dataset.range);
+          saveState();
+          renderHeatmap();
+        });
+      });
+
+      document.getElementById('clearDemoBtn').addEventListener('click', () => {
+        Object.keys(state.history || {}).forEach((k) => {
+          if (state.history[k] && state.history[k].isDemo) delete state.history[k];
+        });
+        saveState();
+        renderHeatmap();
+        renderGamification();
+        showToast('Demo history cleared.', 'info');
+      });
+
+      document.getElementById('heatmapGrid').addEventListener('click', (e) => {
+        const cell = e.target.closest('button[data-heat-date]');
+        if (!cell) return;
+        openDayInspector(cell.dataset.heatDate);
+      });
+
+      // Check URL hash #sync= on startup
+      async function checkUrlSyncHash() {
+        if (window.location.hash && window.location.hash.startsWith('#sync=')) {
+          const key = window.location.hash.slice(6);
+          try {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch (_) {}
+          try {
+            const incoming = await decompressKeyToState(key);
+            showIncomingSyncPreview(incoming);
+          } catch (_) {
+            showToast('Invalid #sync link in URL.', 'warn');
+          }
+        }
+      }
+
+      document.getElementById('linkLocalFileBtn').addEventListener('click', async () => {
+        if (typeof window.showSaveFilePicker !== 'function') {
+          showToast('Auto-save to local file is supported on Desktop & Android Chrome. Use Backup on this browser.', 'warn');
+          return;
+        }
+        try {
+          localFileHandle = await window.showSaveFilePicker({
+            suggestedName: 'daily-routine-map-autosave.json',
+            types: [{ description: 'JSON Backup', accept: { 'application/json': ['.json'] } }]
+          });
+          await writeToLinkedLocalFile(state);
+          const btn = document.getElementById('linkLocalFileBtn');
+          btn.classList.add('!border-[#30D158]/40', '!text-[#30D158]', '!bg-[#30D158]/10');
+          document.getElementById('linkLocalFileLabel').textContent = 'File Linked';
+          showToast('Local file linked — every edit auto-saves to disk!', 'success');
+        } catch (err) {
+          if (err && err.name !== 'AbortError') {
+            showToast('Could not link local file.', 'warn');
+          }
+        }
+      });
+
+      // Request persistent storage on first user interaction
+      document.addEventListener('pointerdown', requestPersistentStorage, { once: true });
+      document.addEventListener('keydown', requestPersistentStorage, { once: true });
+
+      // --- 3. Lifecycle Flush Hooks (pagehide & visibilitychange) ---
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          saveState(true);
+        }
+      });
+      window.addEventListener('pagehide', () => {
+        saveState(true);
+      });
+
+      window.addEventListener('focus', () => pullFromGist(true));
+
+      // --- Supabase Cloud Auth & Real-Time PostgreSQL Sync ---
+      const SUPABASE_URL = 'https://cydriynojgwphidlyzrr.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_enb1qXRW23zdGQASnQtqiw_5IcIgoHs';
+      const SB_TABLE = 'user_routines';
+      let sb = null;
+      let sbUser = null;
+      let sbChannel = null;
+      let sbPushTimer = null;
+      let sbLastPushedAt = 0;
+      let sbAnnounceNext = false;
+
+      function setActiveUser(id) {
+        try {
+          if (id) localStorage.setItem(ACTIVE_USER_KEY, id);
+          else localStorage.removeItem(ACTIVE_USER_KEY);
+        } catch (_) {}
+      }
+
+      function sbUsername(user) {
+        if (!user) return '';
+        const meta = user.user_metadata || {};
+        return meta.username || (user.email ? user.email.split('@')[0] : 'user');
+      }
+
+      function isValidRemoteState(obj) {
+        return obj && typeof obj === 'object' && obj.routines && obj.tasks;
+      }
+
+      function applyRemoteState(remote, toastMsg) {
+        remote.history = remote.history || {};
+        remote.awardedXpItems = remote.awardedXpItems || {};
+        remote.firedToday = remote.firedToday || {};
+        state = remote;
+        saveState(true);
+        checkMidnightRollover();
+        syncTodayHistory();
+        renderAll();
+        if (toastMsg) showToast(toastMsg, 'info');
+      }
+
+      function scheduleSupabasePush() {
+        if (!sb || !sbUser) return;
+        if (sbPushTimer) clearTimeout(sbPushTimer);
+        updateCloudPill('Syncing…', true);
+        sbPushTimer = setTimeout(pushToSupabase, 1200);
+      }
+
+      async function pushToSupabase() {
+        if (!sb || !sbUser) return;
+        sbPushTimer = null;
+        const snapshot = JSON.parse(JSON.stringify(state));
+        sbLastPushedAt = snapshot.updatedAt || Date.now();
+        const { error } = await sb.from(SB_TABLE).upsert({
+          user_id: sbUser.id,
+          username: sbUsername(sbUser),
+          app_state: snapshot,
+          updated_at: new Date(sbLastPushedAt).toISOString()
+        }, { onConflict: 'user_id' });
+        if (error) {
+          updateCloudPill('Sync Error', true);
+          console.warn('Supabase push failed', error);
+        } else {
+          updateCloudPill('Cloud Synced', true);
+        }
+      }
+
+      async function pullFromSupabase(silent = true) {
+        if (!sb || !sbUser) return;
+        const { data, error } = await sb.from(SB_TABLE).select('app_state, updated_at').eq('user_id', sbUser.id).maybeSingle();
+        if (error) {
+          updateCloudPill('Sync Error', true);
+          return;
+        }
+        const remote = data && data.app_state;
+        if (isValidRemoteState(remote) && (remote.updatedAt || 0) > (state.updatedAt || 0)) {
+          applyRemoteState(remote, silent ? '' : 'Loaded your latest progress from the cloud.');
+          updateCloudPill('Cloud Synced', true);
+        } else {
+          // Local is newer (or no cloud row yet) — publish it.
+          await pushToSupabase();
+        }
+      }
+
+      function subscribeRealtime() {
+        unsubscribeRealtime();
+        if (!sb || !sbUser) return;
+        sbChannel = sb.channel(`routine-${sbUser.id}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: SB_TABLE, filter: `user_id=eq.${sbUser.id}` }, (payload) => {
+            const remote = payload.new && payload.new.app_state;
+            if (!isValidRemoteState(remote)) return;
+            const ts = remote.updatedAt || 0;
+            if (ts === sbLastPushedAt) return; // our own echo
+            if (ts > (state.updatedAt || 0)) {
+              applyRemoteState(remote, 'Live update received from another device.');
+              updateCloudPill('Cloud Synced', true);
+            }
+          })
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') updateCloudPill('Live Sync', true);
+            else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') updateCloudPill('Sync Offline', true);
+          });
+      }
+
+      function unsubscribeRealtime() {
+        if (sb && sbChannel) {
+          try { sb.removeChannel(sbChannel); } catch (_) {}
+        }
+        sbChannel = null;
+      }
+
+      async function handleSignedIn(user, announce) {
+        const switching = !sbUser || sbUser.id !== user.id;
+        sbUser = user;
+        if (switching) {
+          const guestState = state;
+          setActiveUser(user.id);
+          let hasUserCache = false;
+          try { hasUserCache = Boolean(localStorage.getItem(getActiveStorageKey())); } catch (_) {}
+          state = hasUserCache ? loadState() : guestState;
+          if (!hasUserCache) {
+            // Carry guest progress into a fresh device/account; cloud copy wins below if newer.
+            state.updatedAt = Math.min(state.updatedAt || 0, Date.now() - 1);
+            try { localStorage.setItem(getActiveStorageKey(), JSON.stringify(state)); } catch (_) {}
+          }
+          await hydrateFromIndexedDbIfNeeded();
+          checkMidnightRollover();
+          syncTodayHistory();
+          renderAll();
+        }
+        renderAuthHeader();
+        await pullFromSupabase(!announce);
+        subscribeRealtime();
+        if (announce) showToast(`Welcome, @${sbUsername(user)}! Cloud sync is on.`, 'success');
+      }
+
+      function handleSignedOut() {
+        unsubscribeRealtime();
+        if (sbPushTimer) { clearTimeout(sbPushTimer); sbPushTimer = null; }
+        sbUser = null;
+        setActiveUser('');
+        state = loadState();
+        renderAuthHeader();
+        renderAll();
+        updateCloudPill('', false);
+      }
+
+      function initSupabase() {
+        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+          console.warn('Supabase SDK failed to load; running local-only.');
+          return;
+        }
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        sb.auth.onAuthStateChange((event, session) => {
+          // Defer async work out of the auth callback (avoids supabase-js lock deadlocks).
+          setTimeout(() => {
+            if (session && session.user) {
+              if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+                const announce = sbAnnounceNext;
+                sbAnnounceNext = false;
+                if (event === 'SIGNED_IN' && sbUser && sbUser.id === session.user.id && !announce) return; // token refresh / tab refocus
+                handleSignedIn(session.user, announce);
+              }
+            } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
+              if (sbUser || getActiveUser()) handleSignedOut();
+            }
+          }, 0);
+        });
+        window.addEventListener('focus', () => pullFromSupabase(true));
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') pullFromSupabase(true);
+          else if (sbPushTimer) { clearTimeout(sbPushTimer); pushToSupabase(); }
+        });
+      }
+
+      function renderAuthHeader() {
+        const label = document.getElementById('authBtnLabel');
+        if (sbUser) {
+          const name = sbUsername(sbUser);
+          label.textContent = `@${name}`;
+          document.getElementById('authActiveUserText').textContent = sbUser.email || `@${name}`;
+          document.getElementById('authSignedInView').classList.remove('hidden');
+          document.getElementById('authForm').classList.add('hidden');
+          document.getElementById('authModalSub').textContent = 'Progress syncs live across all your devices';
+        } else {
+          label.textContent = 'Sign In';
+          document.getElementById('authSignedInView').classList.add('hidden');
+          document.getElementById('authForm').classList.remove('hidden');
+          document.getElementById('authModalSub').textContent = 'Sign in or create an account to sync your progress to the cloud';
+        }
+      }
+
+      function setAuthMessage(kind, text) {
+        const errEl = document.getElementById('authErrorText');
+        const infoEl = document.getElementById('authInfoText');
+        errEl.classList.add('hidden');
+        infoEl.classList.add('hidden');
+        if (!text) return;
+        const el = kind === 'error' ? errEl : infoEl;
+        el.textContent = text;
+        el.classList.remove('hidden');
+      }
+
+      function openAuthModal() {
+        renderAuthHeader();
+        setAuthMessage('', '');
+        document.getElementById('authModal').classList.remove('hidden');
+        document.getElementById('authModal').classList.add('flex');
+      }
+
+      function closeAuthModal() {
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('authModal').classList.remove('flex');
+      }
+
+      function readAuthInputs() {
+        return {
+          email: document.getElementById('authUsernameInput').value.trim().toLowerCase(),
+          password: document.getElementById('authPasswordInput').value
+        };
+      }
+
+      document.getElementById('authBtn').addEventListener('click', openAuthModal);
+      document.getElementById('closeAuthModalBtn').addEventListener('click', closeAuthModal);
+
+      document.getElementById('authForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const { email, password } = readAuthInputs();
+        if (!email || !password) return;
+        if (!sb) return setAuthMessage('error', 'Cloud service unavailable. Check your connection.');
+        setAuthMessage('info', 'Signing in…');
+        sbAnnounceNext = true;
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+          sbAnnounceNext = false;
+          return setAuthMessage('error', error.message || 'Invalid email or password.');
+        }
+        document.getElementById('authPasswordInput').value = '';
+        closeAuthModal();
+      });
+
+      document.getElementById('createAccountBtn').addEventListener('click', async () => {
+        const { email, password } = readAuthInputs();
+        if (!email || !password) return setAuthMessage('error', 'Enter both an email and password.');
+        if (password.length < 6) return setAuthMessage('error', 'Password must be at least 6 characters.');
+        if (!sb) return setAuthMessage('error', 'Cloud service unavailable. Check your connection.');
+        setAuthMessage('info', 'Creating account…');
+        sbAnnounceNext = true;
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { username: email.split('@')[0] },
+            emailRedirectTo: window.location.origin + window.location.pathname
+          }
+        });
+        if (error) {
+          sbAnnounceNext = false;
+          return setAuthMessage('error', error.message);
+        }
+        if (!data.session) {
+          sbAnnounceNext = false;
+          return setAuthMessage('info', 'Check your inbox to confirm your email, then sign in here. Your current progress will be uploaded on first sign-in.');
+        }
+        document.getElementById('authPasswordInput').value = '';
+        closeAuthModal();
+        // SIGNED_IN event carries the guest progress into the new account and starts live sync.
+      });
+
+      document.getElementById('signOutBtn').addEventListener('click', async () => {
+        if (sbPushTimer) { clearTimeout(sbPushTimer); await pushToSupabase(); }
+        saveState(true);
+        closeAuthModal();
+        if (sb) await sb.auth.signOut();
+        handleSignedOut();
+        showToast('Signed out.', 'info');
+      });
+
+      // Init
+      renderAuthHeader();
+      requestPersistentStorage();
+      initPwaAndServiceWorker();
+      buildHourAxisAndGrid();
+      checkMidnightRollover();
+      syncTodayHistory();
+      renderAll();
+      hydrateFromIndexedDbIfNeeded();
+      scrollToCurrentTime();
+      checkUrlSyncHash();
+      pullFromGist(true);
+      initSupabase();
+      setInterval(tickClockAndAlarms, 1000);
+    })();
+  </script>
+</body>
+</html>
